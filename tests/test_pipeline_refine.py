@@ -244,7 +244,7 @@ class TestHyperoptArgs:
             "--strategy", "Miner_000001",
             "--strategy-path", "/freqtrade/user_data/strategies/generated",
             "--timerange", "20220101-20241231",
-            "--spaces", "buy", "sell", "roi", "stoploss",
+            "--spaces", "buy", "roi", "stoploss",
             "--hyperopt-loss", "MultiMetricHyperOptLoss",
             "-e", "150",
         ]
