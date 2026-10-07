@@ -1,0 +1,76 @@
+============================================================
+TASK T-104 — tests + docs hygiene (fitness/genome/compiler coverage + README dev section)
+============================================================
+You are working in an isolated git worktree of project `freqtrade-strategy-miner`
+(Python >=3.11, package `src/strategy_miner`, tests in `tests/`). The repo currently has ONE
+test file (`tests/test_generation.py`). You add coverage for the existing modules and a short
+"Development" section to the README. This is a light hygiene task: no production code changes.
+
+Read first (paths relative to this worktree root):
+- `.orchestrator/AGENT_RULES.md` — binding rules.
+- `src/strategy_miner/fitness.py`, `src/strategy_miner/genome.py`,
+  `src/strategy_miner/generator.py`, `src/strategy_miner/compiler.py` — the modules you test.
+- `README.md` — section numbering: existing sections are "## 1." … "## 8." — append "## 9.".
+
+## SCOPE — create/modify ONLY these files
+- tests/test_fitness.py          (new)
+- tests/test_genome_generator.py (new)
+- README.md                      (append one section only)
+
+## DO NOT TOUCH
+Any other file (especially src/** — this task adds NO production code —, existing tests,
+.orchestrator/**, pyproject.toml).
+
+## REQUIREMENTS
+### tests/test_fitness.py
+- `score(Metrics)` sanity: higher profit_factor -> higher score; higher max_drawdown_pct ->
+  lower score; higher complexity -> lower score; results finite floats for a sample Metrics.
+- `passes_hard_filters` boundary cases (ALL five conditions matter): min_trades exactly met
+  passes / one below fails; max_drawdown exactly met passes / above fails; profit_factor
+  exactly met passes; expectancy <= 0 fails; pair_coverage exactly met passes.
+- Metric defaults: complexity default 1.0.
+### tests/test_genome_generator.py
+- `StrategyGenome.validate()` rejection cases: ema_fast >= ema_slow; rsi_period 1 and 101;
+  rsi_long_max 0 and 50; rsi_short_min 50 and 100; stoploss 0.0, -1.0, +0.1.
+- Generator: for seeds 0..99, `generate_many(5)` genomes all validate and respect documented
+  ranges (ema_fast in [5,50]; ema_slow >= ema_fast+10; rsi_long_max in [22,45];
+  rsi_short_min in [55,78]); two generators with the same seed produce equal sequences;
+  different seeds produce different sequences.
+- Compiler: for 50 generated genomes, `compile_strategy` output parses with ast.parse,
+  contains `class <class_name>(IStrategy):`, does NOT contain "shift(-", and
+  `startup_candle_count = <n>` in the source with n >= ema_slow + 20.
+### README.md (append ONLY — keep existing content untouched)
+Add section "## 9. Phát triển (Development)" in VIETNAMESE (match the file's language),
+covering concisely:
+- venv: `uv venv .venv --python 3.12` + `uv pip install --python .venv/Scripts/python.exe
+  pytest ruff pandas pyarrow` (or: venv đã có sẵn tại `.venv/`);
+- tests: `F:/freqtrade-strategy-miner-template/.venv/Scripts/python.exe -m pytest` (hoặc
+  `.venv/Scripts/python.exe -m pytest` khi ở repo root);
+- lint: `.venv/Scripts/ruff.exe check .` ;
+- demo: `python scripts/run_demo.py --count 10`.
+
+## ACCEPTANCE CRITERIA
+1. Both new test files pass; the WHOLE suite passes (including pre-existing tests).
+2. `ruff check` clean on the two new test files.
+3. README has the new section; `git diff` shows no other README changes.
+4. `git status --porcelain` shows ONLY your 3 files (+ agent_logs/).
+5. `agent_logs/T-104_result.json` written per kit schema (status/task/agent/files_changed/
+   tests_run/tests_passed/issues/blocker/summary).
+
+## VERIFICATION (the orchestrator will re-run these EXACTLY)
+```bash
+cd <worktree>
+F:/freqtrade-strategy-miner-template/.venv/Scripts/python.exe -m pytest -q
+F:/freqtrade-strategy-miner-template/.venv/Scripts/ruff.exe check tests/test_fitness.py tests/test_genome_generator.py
+```
+(NOTE: use that exact venv python — the system python has NO pytest installed.)
+
+## BUDGET NOTE (important)
+WRITE the files first (within your first ~8 minutes), then refine and run tests. Do not explore
+beyond the listed files. If the venv path above does not work from your shell, retry with
+relative `.venv/Scripts/python.exe` — do NOT install anything.
+
+## CONSTRAINTS
+- English code/comments in test files; README addition in Vietnamese (match file language).
+- No commits/branches/pushes — the orchestrator owns git.
+- If blocked: report `BLOCKER:` + `SUGGESTED FOLLOW-UP:`; do not expand scope.

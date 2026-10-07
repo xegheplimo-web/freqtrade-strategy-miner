@@ -1,0 +1,100 @@
+============================================================
+TASK T-102 — store.py + params.py (SQLite registry + hyperopt params flow)
+============================================================
+You are working in an isolated git worktree of project `freqtrade-strategy-miner`
+(Python >=3.11, package `src/strategy_miner`, tests in `tests/`). The project mines Freqtrade
+strategies; hyperopt-tuned parameters travel as freqtrade "params files" (a .json sidecar next
+to the strategy .py). You build the registry + params helpers used by the whole pipeline.
+
+Read first (paths relative to this worktree root):
+- `.orchestrator/INTERFACES.md` — FROZEN contract; sections «3. store.py» and «4. params.py»
+  are your exact spec.
+- `.orchestrator/AGENT_RULES.md` — binding rules.
+- `src/strategy_miner/genome.py` — `StrategyGenome` (has `.class_name`, `.to_dict()`), used by
+  `upsert_candidate`. `src/strategy_miner/fitness.py` — `Metrics` (its fields are the dict
+  shape stored in `record_run(metrics=...)`).
+
+## OBJECTIVE
+Implement exactly two modules + their unit tests:
+1. `src/strategy_miner/store.py` — SQLite registry (stdlib sqlite3) per INTERFACES.md §3.
+2. `src/strategy_miner/params.py` — freqtrade params-file write/read + perturbation + the
+   hyperopt-show stdout parser per INTERFACES.md §4.
+
+## SCOPE — create ONLY these files
+- src/strategy_miner/store.py
+- src/strategy_miner/params.py
+- tests/test_store.py
+- tests/test_params.py
+
+## DO NOT TOUCH
+Any other file (especially .orchestrator/**, other src modules, existing tests, pyproject.toml).
+No new dependencies (stdlib only: sqlite3, json, random, copy, datetime, pathlib, typing).
+
+## REQUIREMENTS
+### store.py (spec = INTERFACES.md §3 — details bind)
+- `Store(db_path)` — creates schema if absent; `PRAGMA foreign_keys=ON`.
+- Tables EXACTLY as specified (candidates / runs / stages), timestamps = UTC ISO-8601 strings,
+  json.dumps(ensure_ascii=False, sort_keys=True).
+- Methods: `upsert_candidate(genome, py_path, params_path=None)` (keyed by class_name; repeat
+  updates paths; returns id) · `get_candidate(id)` (KeyError if missing) · `list_candidates()`
+  (ordered by strategy_id) · `candidate_by_class(class_name)` · `record_run(candidate_id, stage,
+  argv, exit_code, duration_s, artifact_path=None, metrics=None, notes=None)` (ValueError if
+  candidate unknown; argv stored as JSON list; returns run id) · `runs_for(candidate_id,
+  stage=None)` (ordered by id) · `set_stage_status(candidate_id, stage, status, note=None)`
+  (upsert semantics) · `stage_status(candidate_id, stage)` · `shortlist()` (ids where stage
+  "fast_gate" status "shortlisted", ordered).
+- Stage/status vocabularies are in INTERFACES.md §3 — document them in a module docstring.
+### params.py (spec = INTERFACES.md §4 — details bind)
+- `write_params_file(strategy_py, params, *, strategy_name)` -> Path: writes
+  `<strategy_py>.json` with EXACT structure {"strategy_name":..., "params": params,
+  "ft_stratparam_v": 1, "export_time": <UTC ISO>}.
+- `read_params_file(path)` -> inner "params" dict.
+- `perturb_params(params, pct, *, rng)`: deep-copy walk. bool/None/str unchanged; int v>0 ->
+  max(1, int(round(v*(1+delta)))); other ints unchanged; float -> round(v*(1+delta), 4);
+  dict/list recurse; delta = rng.uniform(-pct, +pct). Deterministic for a seeded rng.
+- `load_hyperopt_show_json(text)` -> dict: parse the LAST line of the text that json.loads()
+  into a dict (freqtrade prints a single JSON line after prose headers); ValueError if none.
+
+## UNIT TESTS — mandatory assertions (use tmp_path; NO docker, NO network)
+### tests/test_store.py
+- Schema created on init; upsert twice with same class_name -> same id, updated paths;
+  list ordering by strategy_id; get_candidate KeyError; candidate_by_class None/miss.
+- record_run: returns increasing ids; runs_for ordering + stage filter; metrics dict round-trip
+  (store {"sharpe": 1.5, "trades": 10} -> same dict back); record_run unknown candidate ->
+  ValueError; set_stage_status upsert (call twice, latest status wins) + stage_status;
+  shortlist() returns only "fast_gate"/"shortlisted" ids.
+- Reopening the same db file in a new Store instance sees the data (persistence).
+### tests/test_params.py
+- write_params_file: file exists next to strategy_py with .json suffix; JSON has
+  ft_stratparam_v==1, strategy_name correct, export_time parseable ISO; read_params_file
+  returns the same params.
+- perturb_params: seeded determinism (same seed -> equal output; different seed -> different);
+  every numeric leaf stays within +/-pct of original (allow rounding); int stays int; int >= 1;
+  bools/None/strings unchanged; nested dict/list walked.
+- load_hyperopt_show_json: text = "Some header\nEpoch details\n{\"params\": {\"buy_rsi\": 30},
+  \"stoploss\": -0.1, \"minimal_roi\": {\"0\": 0.1}}\n" -> returns that dict; garbage text ->
+  ValueError; extra prose AFTER json not required to parse.
+
+## ACCEPTANCE CRITERIA
+1. The 4 files exist; importable with stdlib only.
+2. All tests above pass with the project venv (command below).
+3. `ruff check` clean on the 4 files.
+4. `git status --porcelain` shows ONLY your 4 files (+ agent_logs/).
+5. `agent_logs/T-102_result.json` written per kit schema.
+
+## VERIFICATION (the orchestrator will re-run these EXACTLY)
+```bash
+cd <worktree>
+F:/freqtrade-strategy-miner-template/.venv/Scripts/python.exe -m pytest tests/test_store.py tests/test_params.py -q
+F:/freqtrade-strategy-miner-template/.venv/Scripts/ruff.exe check src/strategy_miner/store.py src/strategy_miner/params.py tests/test_store.py tests/test_params.py
+```
+(NOTE: use that exact venv python — the system python has NO pytest installed.)
+
+## BUDGET NOTE (important)
+Write the deliverable files within your first ~10 minutes of work; refine after. Do not burn
+time exploring beyond the files listed above — everything you need is in them.
+
+## CONSTRAINTS
+- `from __future__ import annotations` at top (match repo style). English code/comments.
+- No commits/branches/pushes — the orchestrator owns git.
+- If blocked: report `BLOCKER:` + `SUGGESTED FOLLOW-UP:`; do not expand scope.

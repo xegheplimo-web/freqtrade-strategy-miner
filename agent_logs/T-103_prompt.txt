@@ -1,0 +1,97 @@
+============================================================
+TASK T-103 — data.py (data audit + download args + checksums)
+============================================================
+You are working in an isolated git worktree of project `freqtrade-strategy-miner`
+(Python >=3.11, package `src/strategy_miner`, tests in `tests/`). The project mines Freqtrade
+strategies on Binance USDT-M futures; historical candles live as `.feather` files under
+`freqtrade/user_data/data/<exchange>/futures/`. You build the data stage module: filenames,
+QA audit, download-command args, checksums.
+
+Read first (paths relative to this worktree root):
+- `.orchestrator/INTERFACES.md` — FROZEN contract; section «5. data.py» is your exact spec.
+- `.orchestrator/AGENT_RULES.md` — binding rules.
+
+## OBJECTIVE
+Implement `src/strategy_miner/data.py` + unit tests. Pure logic: NO docker, NO network in tests.
+`pyarrow` IS available in the venv (installed) — use it for reading `.feather` files.
+
+## SCOPE — create ONLY these files
+- src/strategy_miner/data.py
+- tests/test_data.py
+
+## DO NOT TOUCH
+Any other file (especially .orchestrator/**, other src modules, existing tests, pyproject.toml).
+
+## REQUIREMENTS (spec = INTERFACES.md §5 — details bind)
+- Dataclasses `PairAudit` and `DataAudit` with EXACTLY the fields listed in §5.
+- `feather_filename(pair, timeframe, *, trading_mode="futures")`:
+  "BTC/USDT:USDT" -> "BTC_USDT_USDT-5m-futures.feather" (futures; replace "/" and ":" with "_");
+  spot -> "BTC_USDT_USDT-5m.feather". Timeframes like "5m", "15m", "1h".
+- `pair_data_path(data_dir, pair, timeframe, *, exchange="binance", trading_mode="futures")`:
+  futures -> `data_dir/<exchange>/futures/<feather_filename>`; spot -> `data_dir/<exchange>/<file>`.
+  Return a Path.
+- `audit_data(data_dir, pairs, timeframes, *, timerange=None, exchange="binance",
+  trading_mode="futures")` -> DataAudit:
+  - reads each (pair, timeframe) feather via pyarrow (column `date` holds the candle open time,
+    timestamp ms or ns, optionally tz-aware — normalize to UTC ms internally);
+  - `duplicates` = count of repeated timestamps (diff == 0 after sort);
+  - `gaps` = count of consecutive diffs > 1.5 * expected interval; `max_gap_minutes` =
+    largest diff in minutes (0.0 if < 2 rows);
+  - `ohlc_violations` = rows where high < max(open, close) OR low > min(open, close) OR
+    high < low;
+  - `zero_volume_rows` = rows where volume == 0;
+  - missing file -> PairAudit(missing=True, path="", rows=0, ...) + an issue string;
+  - `timerange` ("YYYYMMDD-YYYYMMDD", either side may be empty) -> expected row count from
+    first/last candle stamps; missing_frac > 0.05 -> issue;
+  - `ok` = False if any missing file, duplicates > 0, ohlc_violations > 0, or timerange
+    coverage issue; `issues` tuple lists human-readable strings; `first_ts`/`last_ts` are
+    UTC ISO strings ("" when missing).
+- `download_args(config_container_path, pairs, timeframes, timerange, *, exchange="binance")`
+  -> EXACT list: ["download-data", "--config", cfg, "--exchange", exchange, "--pairs", *pairs,
+  "--timeframes", *timeframes, "--timerange", timerange]. (Trading mode comes from the config
+  file — do NOT add a --trading-mode flag.)
+- `data_checksums(data_dir, pairs, timeframes, *, exchange="binance", trading_mode="futures")`
+  -> {relative posix filename: sha256 hex}; stream files in chunks; skip missing.
+
+## UNIT TESTS — mandatory (create fixtures IN TEST CODE via pyarrow, in tmp_path)
+Build a futures data dir: `<tmp>/data/binance/futures/BTC_USDT_USDT-5m-futures.feather`
+with columns: date (start 2025-01-01 00:00 UTC, 5-minute steps, 100 rows), open/high/low/
+close/volume (pa.float64). Inject deliberately:
+- 1 duplicate timestamp (repeat one row) -> duplicates == 1 (after sort);
+- 1 gap (skip 3 candles = 15 min) -> gaps == 1, max_gap_minutes == 15.0;
+- 1 violation: high < low on one row -> ohlc_violations == 1;
+- volume == 0 on one row -> zero_volume_rows == 1.
+Cases to assert:
+- happy path (clean file, no timerange): ok == True; rows == expected; first_ts/last_ts ISO;
+- the injected file: ok == False; exact counts above; issues non-empty;
+- missing pair -> missing True, ok False;
+- timerange coverage: timerange spanning more than the file (e.g. "20240101-" ) triggers
+  coverage issue; matching timerange passes;
+- feather_filename/pair_data_path exact strings (futures AND spot);
+- download_args exact list equality (freeze order);
+- data_checksums: deterministic (2 calls equal), 64-hex, missing file skipped.
+- datetime tz note: accept tz-naive and tz-aware date columns (convert to UTC).
+
+## ACCEPTANCE CRITERIA
+1. The 2 files exist; imports limited to stdlib + pyarrow.
+2. All tests pass with the project venv (command below).
+3. `ruff check` clean on the 2 files.
+4. `git status --porcelain` shows ONLY your 2 files (+ agent_logs/).
+5. `agent_logs/T-103_result.json` written per kit schema.
+
+## VERIFICATION (the orchestrator will re-run these EXACTLY)
+```bash
+cd <worktree>
+F:/freqtrade-strategy-miner-template/.venv/Scripts/python.exe -m pytest tests/test_data.py -q
+F:/freqtrade-strategy-miner-template/.venv/Scripts/ruff.exe check src/strategy_miner/data.py tests/test_data.py
+```
+(NOTE: use that exact venv python — the system python has NO pytest installed.)
+
+## BUDGET NOTE (important)
+Write the deliverable files within your first ~10 minutes of work; refine after. Do not burn
+time exploring beyond the files listed above — everything you need is in them.
+
+## CONSTRAINTS
+- `from __future__ import annotations` at top. English code/comments.
+- No commits/branches/pushes — the orchestrator owns git.
+- If blocked: report `BLOCKER:` + `SUGGESTED FOLLOW-UP:`; do not expand scope.

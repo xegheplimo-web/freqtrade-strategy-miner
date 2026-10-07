@@ -1,0 +1,72 @@
+{
+  "created_at": "2026-10-07T19:05:55.036542+00:00",
+  "seed": 20261008,
+  "count": 5,
+  "train_timerange": "20220101-20241231",
+  "validation_timerange": "20250101-20251231",
+  "final_test_timerange": "20260101-20260930",
+  "strategies": [
+    {
+      "strategy_id": 1,
+      "timeframe": "5m",
+      "can_short": true,
+      "ema_fast": 23,
+      "ema_slow": 66,
+      "rsi_period": 21,
+      "rsi_long_max": 29,
+      "rsi_short_min": 59,
+      "stoploss": -0.092
+    },
+    {
+      "strategy_id": 2,
+      "timeframe": "5m",
+      "can_short": true,
+      "ema_fast": 10,
+      "ema_slow": 238,
+      "rsi_period": 13,
+      "rsi_long_max": 31,
+      "rsi_short_min": 76,
+      "stoploss": -0.186
+    },
+    {
+      "strategy_id": 3,
+      "timeframe": "5m",
+      "can_short": true,
+      "ema_fast": 31,
+      "ema_slow": 86,
+      "rsi_period": 25,
+      "rsi_long_max": 45,
+      "rsi_short_min": 69,
+      "stoploss": -0.036
+    },
+    {
+      "strategy_id": 4,
+      "timeframe": "5m",
+      "can_short": true,
+      "ema_fast": 28,
+      "ema_slow": 112,
+      "rsi_period": 14,
+      "rsi_long_max": 31,
+      "rsi_short_min": 69,
+      "stoploss": -0.043
+    },
+    {
+      "strategy_id": 5,
+      "timeframe": "5m",
+      "can_short": true,
+      "ema_fast": 10,
+      "ema_slow": 196,
+      "rsi_period": 16,
+      "rsi_long_max": 43,
+      "rsi_short_min": 67,
+      "stoploss": -0.139
+    }
+  ],
+  "files": [
+    "freqtrade/user_data/strategies/generated/Miner_000001.py",
+    "freqtrade/user_data/strategies/generated/Miner_000002.py",
+    "freqtrade/user_data/strategies/generated/Miner_000003.py",
+    "freqtrade/user_data/strategies/generated/Miner_000004.py",
+    "freqtrade/user_data/strategies/generated/Miner_000005.py"
+  ]
+}

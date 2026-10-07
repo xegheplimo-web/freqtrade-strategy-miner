@@ -1,0 +1,115 @@
+============================================================
+TASK T-101 — runner.py + results.py (docker runner + backtest parsing)
+============================================================
+You are working in an isolated git worktree of project
+`freqtrade-strategy-miner` (Python >=3.11, package `src/strategy_miner`, tests in `tests/`).
+The project orchestrates Freqtrade via the docker image `freqtradeorg/freqtrade:stable`
+to mine trading strategies. You build the two FOUNDATION modules that everything else depends on.
+
+Read first (paths relative to this worktree root):
+- `.orchestrator/INTERFACES.md` — FROZEN contract; sections «1. runner.py» and «2. results.py»
+  are your exact spec. Do not invent signature changes.
+- `.orchestrator/AGENT_RULES.md` — binding rules.
+- `src/strategy_miner/fitness.py` — the `Metrics` dataclass returned by `extract_metrics`.
+- `tests/fixtures/backtest-sample.zip` — a REAL freqtrade backtest export (strategy
+  ZarTest02SL35, 4705 trades) used as the test fixture.
+
+## OBJECTIVE
+Implement exactly two modules + their unit tests:
+1. `src/strategy_miner/runner.py` — docker execution wrapper (DockerRunner, RunResult,
+   RunnerError, Runner Protocol) per INTERFACES.md §1.
+2. `src/strategy_miner/results.py` — parse freqtrade backtest artifacts (zip or extracted
+   .json) into StrategyStats; extract `fitness.Metrics`; helpers per INTERFACES.md §2.
+
+## SCOPE — create ONLY these files
+- src/strategy_miner/runner.py
+- src/strategy_miner/results.py
+- tests/test_runner.py
+- tests/test_results.py
+
+## DO NOT TOUCH
+Any other file (especially .orchestrator/**, src/strategy_miner/{genome,generator,compiler,
+commands,fitness,orchestrator}.py, tests/ existing files, pyproject.toml). No new dependencies
+(stdlib only: zipfile, json, subprocess, re, time, pathlib, dataclasses, typing, shutil).
+
+## REQUIREMENTS
+### runner.py (spec = INTERFACES.md §1, all details binding)
+- `DEFAULT_IMAGE = "freqtradeorg/freqtrade:stable"`, `CONTAINER_USERDATA = "/freqtrade/user_data"`.
+- `RunnerError(RuntimeError)`.
+- `RunResult` frozen dataclass: argv (tuple), exit_code, stdout (combined out+err, utf-8
+  errors="replace", ANSI escapes stripped), duration_s, log_path (Path|None).
+- `Runner` typing.Protocol with `run()` and `map_path()`.
+- `DockerRunner(user_data_dir, *, image=DEFAULT_IMAGE, docker_bin="docker")`:
+  - `map_path(host_path)`: path under `user_data_dir` -> `/freqtrade/user_data/<rel>` posix
+    (forward slashes); ValueError if outside or not under root.
+  - `build_command(args)`: exactly `[docker_bin, "run", "--rm", "-v",
+    f"{posix(user_data_dir)}:{CONTAINER_USERDATA}", image, *args]`.
+  - `run(args, *, timeout_s=3600, log_dir=None, log_name=None)`: subprocess.run(cmd,
+    capture_output=True, timeout=timeout_s); timeout -> exit_code 124 and stdout prefixed
+    `TIMEOUT after <n>s\n` + partial output; missing docker binary -> RunnerError; when
+    log_dir+log_name given also write the full combined output to log_dir/log_name and set
+    log_path.
+  - UTF-8 console safety on Windows: never crash on undecodable bytes.
+### results.py (spec = INTERFACES.md §2)
+- `StrategyStats` frozen dataclass (summary raw dict; trades/per_pair/pairlist tuples).
+  Missing optional keys must be tolerated: `trades`/`results_per_pair`/`pairlist` absent ->
+  empty tuple; `per_pair` EXCLUDES the row whose key == "TOTAL".
+- `load_backtest_json(path)` — .zip (read the single non-config *.json entry, prefer
+  `backtest-result-*.json`) or plain .json; ValueError on unreadable/malformed.
+- `parse_backtest_result(path)` -> `{name: StrategyStats}`; ValueError when no strategies.
+- `extract_metrics(stats)` -> `fitness.Metrics` with the EXACT mapping of INTERFACES.md §2:
+  total_return_pct = profit_total*100; max_drawdown_pct = max_drawdown_account*100;
+  sharpe/sortino/profit_factor/expectancy as-is; trades = total_trades;
+  pair_coverage = traded_pairs/len(pairlist) (0.0 if empty); stability =
+  positive_months_fraction(summary); complexity = 1.0.
+- `positive_months_fraction(summary)` — months from `summary["periodic_breakdown"]["month"]`
+  with profit_abs > 0 / total; missing/empty -> 0.0.
+- `drop_top_n_trades(trades, n)` — sort by profit_abs desc, drop first n; return
+  {"trades_after": int, "profit_abs_after": float, "profit_factor_after": float|None}
+  (None when gross_loss == 0).
+
+## UNIT TESTS — mandatory assertions
+### tests/test_runner.py (NO docker, NO network allowed in unit tests)
+- build_command exact argv equality for a sample user_data dir; map_path inside/outside cases;
+  ANSI stripping (e.g. stdout "\x1b[31mred\x1b[0m" -> "red");
+  run() behavior via a subclass overriding build_command() with a python one-liner
+  (e.g. `[sys.executable, "-c", "print('hi'); import sys; sys.exit(3)"]`): asserts exit_code,
+  stdout, duration_s; timeout test with `time.sleep(30)` and timeout_s=1 -> exit_code 124 +
+  stdout startswith "TIMEOUT"; log writing test (log_dir + log_name -> file exists + log_path set).
+### tests/test_results.py (using tests/fixtures/backtest-sample.zip)
+- parse_backtest_result: exactly {"ZarTest02SL35"}; len(trades)==4705; len(per_pair)==23;
+  no TOTAL row in per_pair; len(pairlist)==23; summary pins: total_trades==4705,
+  profit_factor ~= 1.2132739626062352, profit_total ~= 3.17402467726923,
+  max_drawdown_account ~= 0.14730292549816232 (assertAlmostEqual places>=9);
+  trades[0]["open_date"] startswith "2026-09-07".
+- extract_metrics: trades==4705; total_return_pct ~= 317.402467726923;
+  max_drawdown_pct ~= 14.730292549816232; stability == 1.0; pair_coverage ==
+  (count per_pair trades>0)/23 (compute dynamically) and 0 < coverage <= 1; complexity == 1.0.
+- positive_months_fraction: synthetic cases (missing breakdown -> 0.0; mixed pos/neg; empty list).
+- drop_top_n_trades: n=100 -> trades_after==4605, profit_abs_after < 8252.4641609 and equals
+  the recomputed sum of remaining trades; n=0 -> trades_after==4705 and
+  profit_abs_after ~= 8252.4641609; n large -> trades_after==0, pf None.
+- load_backtest_json: accepts extracted .json (extract in test to tmp); malformed zip/json ->
+  ValueError; synthetic 2-strategy json parses to 2 entries.
+
+## ACCEPTANCE CRITERIA
+1. The 4 files exist; everything importable without third-party deps.
+2. All tests above pass with the project venv (command below).
+3. `ruff check` clean on the 4 files (line-length 100, rules E,F,W,I).
+4. No files outside scope modified (run `git status --porcelain` — only your 4 files + nothing
+   else; agent_logs/ output is expected).
+5. `agent_logs/T-101_result.json` written per kit schema (status/task/agent/files_changed/
+   tests_run/tests_passed/issues/blocker/summary).
+
+## VERIFICATION (the orchestrator will re-run these EXACTLY)
+```bash
+cd <worktree>
+F:/freqtrade-strategy-miner-template/.venv/Scripts/python.exe -m pytest tests/test_runner.py tests/test_results.py -q
+F:/freqtrade-strategy-miner-template/.venv/Scripts/ruff.exe check src/strategy_miner/runner.py src/strategy_miner/results.py tests/test_runner.py tests/test_results.py
+```
+(NOTE: use that exact venv python — the system python has NO pytest installed.)
+
+## CONSTRAINTS
+- Python 3.11+ style, `from __future__ import annotations` at top (match repo style).
+- English code/comments. No commits/branches/pushes — the orchestrator owns git.
+- If blocked: report `BLOCKER:` + `SUGGESTED FOLLOW-UP:` in your final report; do not expand scope.
