@@ -139,6 +139,21 @@ One entry per binding decision. Newest at the bottom. Frozen interfaces/names ch
 - Acceptance harness: `config/miner.e2e-acceptance.json` (same data/timeranges; relaxed
   filters dd <= 60, pf >= 0.5, coverage >= 0.5, min_trades unchanged) — purpose: exercise
   EVERY stage mechanically end-to-end on live docker. Production config untouched.
-- E2E run #2: `run --count 5 --epochs 40 --config config/miner.e2e-acceptance.json`; if the
-  walk-forward gate still rejects all, the champion path is additionally exercised via
-  `final --ids <id> --force` (sidecars exist post-hyperopt).
+## D-016 — T-301 E2E acceptance: results + product findings
+- All stages live-exercised (docker freqtrade 2026.9 + own data): data-audit (499,104 rows/pair)
+  -> fast-gate (5 backtests) -> hyperopt (5/5 passed, 66-82s each, real exports) -> validation
+  -> bias (10 runs; 1 passed; 4 "inconclusive: too few trades caught (0/10)" — lookahead needs
+  >=10 signals) -> walk-forward (55 fold runs = 11 folds x 5) -> robustness (20 runs: fee +
+  perturb x 5; drop-top pure-compute) -> final_test (5 runs) -> report + status.
+- Champion write path proven live via forced final on Miner_000004 under a min_trades=1 smoke
+  config: output/champions/Miner_000004/{py,json,zip,champion.json} (pf 1.218, exp +0.014,
+  8 trades). Production acceptance outcome stands: 5/5 rejected (correct gates).
+- PRODUCT FINDINGS (tuning decisions deferred to Sếp):
+  1. hyperopt (40 epochs, SharpeHyperOptLoss) drifts to degenerate sparse-entry params
+     (e.g. buy_rsi_long_max=2) — needs loss trade-floor / tighter param ranges / more epochs.
+  2. fast_gate (production gates incl. hardcoded expectancy>0) rejects default genomes BEFORE
+     hyperopt can refine them; pipeline effectively needs either better genomes or gate
+     calibration (e.g. drop expectancy from pre-hyperopt gate).
+- CLI note: --config/--root global; --ids/--epochs/--force per-subcommand; report/status take
+  no --ids.
+- freqtrade-stable audit: 1 regenerated .pyc only; no data/config/strategy writes.

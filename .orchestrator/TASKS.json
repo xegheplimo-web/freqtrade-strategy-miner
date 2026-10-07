@@ -64,6 +64,6 @@
     {"id": "T-204", "title": "robustness stage (fee/perturb/drop-top)", "agent": "opencode", "wave": 2, "status": "done", "note": "merged; orchestrator sidecar strategy_name fix (live-verified)", "deps": ["T-201"]},
     {"id": "T-205", "title": "cli.py + entry points + docs/pipeline.md", "agent": "opencode", "wave": 3, "status": "done", "note": "merged; 31 tests; opencode died at /tmp permission wall, orchestrator verified + smoke (D-010)", "deps": ["T-202", "T-203", "T-204"]},
     {"id": "T-206", "title": "compiler emits buy-space IntParameters + hyperopt spaces fix", "agent": "devin", "wave": 3, "status": "done", "note": "merged; found live via micro-test (D-014); 198 tests", "deps": ["T-201"]},
-    {"id": "T-301", "title": "E2E acceptance: full pipeline live run (Hermes)", "agent": "hermes", "wave": 3, "status": "running", "note": "run --count 3 --epochs 40; log agent_logs/e2e_run.log", "deps": ["T-205", "T-206"]}
+    {"id": "T-301", "title": "E2E acceptance: full pipeline live run (Hermes)", "agent": "hermes", "wave": 3, "status": "done", "note": "all stages live-verified; champion path exercised (forced final, min_trades=1 smoke cfg); acceptance log agent_logs/e2e_sequence.log", "deps": ["T-205", "T-206"]}
   ]
 }

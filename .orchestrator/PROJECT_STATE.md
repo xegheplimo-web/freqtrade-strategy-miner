@@ -7,10 +7,11 @@ champion), driven by config + registry, orchestrated around the freqtrade docker
 **Repo**: `F:/freqtrade-strategy-miner-template` · **Worktrees**: `F:/freqtrade-strategy-miner-worktrees/<TASK-ID>`
 
 ## Current milestone
-**M3 — E2E acceptance** (2026-10-08): all tasks T-101..T-206 merged (suite 231); CLI live
-(`status` smoke OK); stage micro-tests live-verified: fast_gate (real backtest+artifact),
-perturb sidecar, lookahead CSV, recursive parser (fixed against real output), hyperopt
-re-verify in flight. Next: T-301 E2E acceptance (full live pipeline run).
+**M3 — E2E acceptance: DONE** (2026-10-08). All tasks T-101..T-206 + T-301 complete (suite 231).
+Every pipeline stage executed live against docker freqtrade 2026.9 with own data. Champion
+write path proven. **Next (M4 candidates, Sếp decides):** hyperopt quality tuning (loss
+trade-floor, param ranges, epochs), fast-gate calibration vs hyperopt-first flow, more rule
+templates in the generator.
 
 ## Completed
 - 2026-10-08 — SCAN: template audited (demo-only; WORKFLOW.md stages 3–10 unimplemented);
@@ -39,16 +40,17 @@ re-verify in flight. Next: T-301 E2E acceptance (full live pipeline run).
 - 2026-10-08 — T-205 CLI merged (opencode; died at /tmp permission wall after writing all
   files; orchestrator verified per D-010: 31 tests, suite, ruff, live `status` smoke).
   T-206 merged (devin; buy-space IntParameters + spaces buy/roi/stoploss). Suite 231.
+- 2026-10-08 — T-301 E2E acceptance DONE (D-016): all stages live (fast-gate 5/5 -> hyperopt
+  5/5 -> validation/bias/walk-forward 55 folds/robustness 20 runs/final 5 -> report/status);
+  champion path proven (output/champions/Miner_000004 under min_trades=1 smoke cfg); cohort
+  honestly rejected by the gates (degenerate hyperopt params — see D-016 findings);
+  freqtrade-stable untouched (1 regenerated .pyc only).
 
 ## In progress
-- Hyperopt live re-verification (micro, 8 epochs) — then T-301 E2E.
+- (none) — round complete; M4 tuning candidates listed above.
 
 ## Next up
-- T-301 E2E acceptance (live docker run: data-audit -> fast-gate -> hyperopt -> validate ->
-  bias -> walk-forward -> robust -> final -> report).
-
-## Blocked
-- none
+- Sếp product decisions: hyperopt loss/range tuning, gate calibration, generator templates.
 
 ## Key decisions (see DECISIONS.md)
 - D-003 self-contained runtime (own user_data + own data; freqtrade-stable read-only)

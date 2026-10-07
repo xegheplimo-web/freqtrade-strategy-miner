@@ -10,6 +10,10 @@ freqtrade/user_data/hyperopt_results/*
 !freqtrade/user_data/backtest_results/.gitkeep
 !freqtrade/user_data/hyperopt_results/.gitkeep
 output/miner.db*
+output/report.md
+output/robustness/
+freqtrade/user_data/analysis/
+freqtrade/user_data/hyperopt.lock
 agent_logs/
 .serena/
 _sandbox/

@@ -1,0 +1,17 @@
+{
+  "status": "done",
+  "task": "T-301",
+  "agent": "hermes (orchestrator)",
+  "files_changed": [],
+  "tests_run": "suite 231 passed (unchanged); LIVE E2E: data-audit ok; fast-gate 5/5 backtested; hyperopt 5/5 passed (real docker, 66-82s each); validation 5/5 ran; bias 10 runs (1 passed, 4 inconclusive 'too few trades caught (0/10)' - lookahead needs >=10 signals); walk-forward 55 fold runs (11 folds x 5); robustness 20 runs (fee+perturb x 5); final_test 5 runs; champion path exercised via forced final under min_trades=1 smoke config -> output/champions/Miner_000004/ (py+json+zip+champion.json)",
+  "tests_passed": true,
+  "issues": [
+    "Run #1 (production config): fast-gate rejected 3/3 (legit: pf 0.66-0.86, negative expectancy) -> pipeline correctly stopped at empty shortlist. Run #2 needed: production gates pre-hyperopt kill default genomes.",
+    "Run #2 (relaxed acceptance config): still 5/5 rejected at fast-gate - passes_hard_filters includes hardcoded expectancy>0; default genomes are negative. Fix: drove stages via per-stage CLI commands with explicit --ids (the CLI is designed for this).",
+    "Hyperopt picked degenerate sparse-entry params (buy_rsi_long_max=2 on cand 1) - train Sharpe optimized on few trades; downstream gates rejected everything. Product tuning needed (loss fn / epochs / param ranges / trade floor) - deferred to Sếp.",
+    "CLI arg order pitfalls: --config/--root are GLOBAL (before subcommand); --ids/--epochs/--force are PER-SUBCOMMAND (after). First sequence script failed with 'invalid choice 1'; report/status have no --ids.",
+    "freqtrade-stable audit: 1 bytecode cache (.pyc) regenerated; zero data/config/strategy writes - miner docker mounts confined to its own repo."
+  ],
+  "blocker": null,
+  "summary": "E2E acceptance COMPLETE: every pipeline stage executed live against real docker freqtrade + own data. Final outcome of the acceptance cohort: all 5 candidates honestly rejected at validation/walk-forward/robustness/final (correct gate behavior on degenerate hyperopt output); champion write path proven via forced final (Miner_000004: pf 1.218, expectancy +0.014, 8 trades, champion.json written). report.md generated. Artifacts: 5 sidecars, 5 lookahead CSVs, robustness variants, 5 backtest zips, champions/Miner_000004."
+}

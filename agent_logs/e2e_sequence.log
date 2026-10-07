@@ -1,0 +1,27 @@
+=== STEP hyperopt @ 04:50:07 ===
+{"hyperopt": {"1": "passed", "2": "passed", "3": "passed", "4": "passed", "5": "passed"}}
+EXIT_hyperopt=0
+=== STEP validate @ 04:56:12 ===
+{"validation": {"1": "rejected: failed hard filters", "2": "rejected: failed hard filters", "3": "rejected: failed hard filters", "4": "rejected: failed hard filters", "5": "rejected: failed hard filters"}}
+EXIT_validate=0
+=== STEP bias @ 04:56:51 ===
+{"bias": {"1": "passed", "2": "rejected: bias test inconclusive", "3": "rejected: bias test inconclusive", "4": "rejected: bias test inconclusive", "5": "rejected: bias test inconclusive"}}
+EXIT_bias=0
+=== STEP walkforward @ 04:57:42 ===
+{"walk_forward": {"1": "rejected: median profit_factor 0.016635007485681204 < 1.0", "2": "rejected: median profit_factor 0.14873314716210104 < 1.0", "3": "rejected: median profit_factor 0.0 < 1.0", "4": "rejected: median profit_factor 0.12568871532783293 < 1.0", "5": "rejected: median profit_factor 0.0 < 1.0"}}
+EXIT_walkforward=0
+=== STEP robust @ 05:02:34 ===
+{"robustness": {"1": "rejected: fee, perturb, drop_top", "2": "rejected: fee, drop_top", "3": "rejected: fee, perturb, drop_top", "4": "rejected: fee, drop_top", "5": "rejected: fee, perturb, drop_top"}}
+EXIT_robust=0
+=== STEP final @ 05:05:11 ===
+{"final_test": {"1": "rejected: trades 10 < 300, expectancy <= 0", "2": "rejected: trades 13 < 300, profit_factor 0.3113744117636619 < 0.5, expectancy <= 0", "3": "rejected: trades 1 < 300, profit_factor 0.0 < 0.5, pair_coverage 0.3333333333333333 < 0.5, expectancy <= 0", "4": "rejected: trades 8 < 300", "5": "rejected: trades 1 < 300, profit_factor 0.0 < 0.5, pair_coverage 0.3333333333333333 < 0.5, expectancy <= 0"}}
+EXIT_final=0
+=== STEP report @ 05:05:46 ===
+usage: miner [-h] [--root ROOT] [--config CONFIG] <command> ...
+miner: error: unrecognized arguments: --ids 1 2 3 4 5
+EXIT_report=2
+=== STEP status @ 05:05:47 ===
+usage: miner [-h] [--root ROOT] [--config CONFIG] <command> ...
+miner: error: unrecognized arguments: --ids 1 2 3 4 5
+EXIT_status=2
+=== SEQUENCE DONE @ 05:05:47 ===
