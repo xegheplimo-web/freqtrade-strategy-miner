@@ -1,0 +1,20 @@
+{
+  "status": "done",
+  "task": "T-205",
+  "agent": "opencode (+ orchestrator verification)",
+  "files_changed": [
+    "src/strategy_miner/cli.py",
+    "src/strategy_miner/__main__.py",
+    "scripts/miner.py",
+    "tests/test_cli.py",
+    "docs/pipeline.md"
+  ],
+  "tests_run": "pytest tests/test_cli.py -q -> 31 passed; pytest -q -> 228 passed, 552 subtests; ruff clean (4 py files); smoke: python -m strategy_miner status -> exit 0, empty-store JSON",
+  "tests_passed": true,
+  "issues": [
+    "opencode terminated early (~04:12) while smoke-testing: it attempted `mkdir -p /tmp/t205smoke` which its permission layer auto-rejected (external_directory C:\\Users\\atton\\AppData\\Local\\Temp\\*), and the session ended before retrying in-repo. All 5 deliverable files were already written.",
+    "Orchestrator verification (D-010 completion): re-ran test_cli.py (31 passed), full suite (228 passed), ruff (clean), and a real `status` smoke from the worktree root (exit 0, correct empty-store JSON). No code changes needed."
+  ],
+  "blocker": null,
+  "summary": "CLI wiring every stage: subcommands generate/data-download/data-audit/fast-gate/hyperopt/validate/bias/walk-forward/robust/final/report/status/run (+ --ids, --count, --root, --config); `run` executes data-audit -> fast-gate -> hyperopt -> validation -> bias -> walk-forward -> robustness -> final, stopping at the first empty id list, emitting per-stage JSON and returning 1 when a stage reports a failure; report writes output/report.md; docs/pipeline.md (104 lines) documents usage + stage map."
+}
