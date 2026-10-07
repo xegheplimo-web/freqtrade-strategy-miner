@@ -58,3 +58,11 @@ One entry per binding decision. Newest at the bottom. Frozen interfaces/names ch
 - Pipeline NEVER promotes to live trading; final gate only writes champion artifacts +
   dry-run instructions. Final-test run is one-shot per candidate (recorded, re-run requires
   explicit `--force`). No secrets in repo; empty exchange keys in configs.
+
+## D-009 (2026-10-08) — T-101 reassigned devin -> cline (agent stall policy)
+
+- Devin CLI (print mode, --permission-mode dangerous) stalled on T-101: 21 min wall-clock,
+  CPU frozen ~2.5s, zero file writes, log frozen after intro paragraph. Evidence kept at
+  `worktrees/T-101/agent_logs/T-101.devin-stall.log`.
+- Policy: if an agent produces no worktree file writes within ~20 min (CPU idle), kill it and
+  reassign to cline; keep the stalled log as evidence. Cline delivered T-102/T-103 fast & clean.
