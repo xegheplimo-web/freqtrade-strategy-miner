@@ -45,8 +45,10 @@ FINAL_STAGE = "final_test"
 # Container sub-directory holding the lookahead CSV exports.
 ANALYSIS_SUBDIR = "analysis"
 
-# A percentage cell, e.g. "0.000%" or "12.500%".
+# A percentage cell, e.g. "0.000%" or "12.500%" (sign handled via abs()).
 _PCT_RE = re.compile(r"(\d+(?:\.\d+)?)%")
+# An indicator name (first cell of a data row).
+_IDENT_RE = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")
 # CSI escape sequences (defensive: the Runner already strips ANSI).
 _ANSI_RE = re.compile(r"\x1b\[[0-9;]*[A-Za-z]")
 
@@ -120,40 +122,51 @@ def parse_lookahead_csv(path: Path | str) -> dict[str, Any] | None:
     return None
 
 
-def _split_cells(line: str) -> list[str]:
-    """Split a table row into cells (pipe-delimited when present, else whitespace)."""
-    if "|" in line:
-        cells = [cell.strip() for cell in line.split("|")]
-    else:
-        cells = line.split()
-    return [cell for cell in cells if cell]
+def _row_cells(line: str) -> list[str]:
+    """Split a table row into cells: box/ASCII pipes when present, else whitespace."""
+    if line.lstrip().startswith(("│", "|")):
+        return [cell.strip() for cell in re.split(r"[│|]", line) if cell.strip()]
+    return line.split()
 
 
 def parse_recursive_stdout(text: str) -> dict[str, float]:
-    """Parse the ``recursive-analysis`` stdout table into ``{indicator: max_pct}``.
+    """Parse the ``recursive-analysis`` stdout table into ``{indicator: max_abs_pct}``.
 
-    ``recursive-analysis`` has no csv/exit signal: it prints a table whose rows are
-    indicators and whose columns are startup-candle percentages. For every line that
-    contains at least one ``<number>%`` cell the first cell is taken as the indicator
-    name and the maximum percentage on that line is recorded. Table borders, headers
-    and any non-table prose are ignored. Returns an empty dict when nothing parses
-    (callers record the raw note instead of crashing).
+    The real output is a rich table whose data rows look like::
+
+        │   ema_fast │ -0.000% │              0.000% │      - │       - │
+
+    (``-`` marks a cell without data). ``recursive-analysis`` has no csv/exit
+    signal, so this parser is the machine-readable interface. Only data rows are
+    accepted: the first cell must be an indicator identifier and every remaining
+    cell must be a percentage or ``-``. This skips the header (``┃ Indicators ┃``),
+    borders, log lines and the ``Startup candle ... 100%`` progress bar. For every
+    accepted row the maximum *absolute* percentage is recorded (a large negative
+    deviation is just as recursive as a positive one). Returns an empty dict when
+    nothing parses (callers record the raw note instead of crashing).
     """
     result: dict[str, float] = {}
     for raw_line in text.splitlines():
         line = _ANSI_RE.sub("", raw_line).strip()
-        if not line:
+        if not line or "%" not in line:
             continue
-        percentages = [float(match) for match in _PCT_RE.findall(line)]
-        if not percentages:
-            continue
-        cells = _split_cells(line)
+        cells = _row_cells(line)
         if not cells:
             continue
-        indicator = cells[0]
-        if not indicator or set(indicator) <= {"-", "="}:
+        name = cells[0]
+        if not _IDENT_RE.fullmatch(name):
             continue
-        result[indicator] = max(percentages)
+        pcts: list[float] = []
+        for cell in cells[1:]:
+            if cell in {"", "-"}:
+                continue
+            match = _PCT_RE.search(cell)
+            if match is None:
+                pcts = []
+                break
+            pcts.append(abs(float(match.group(0).rstrip("%"))))
+        if pcts:
+            result[name] = max(pcts)
     return result
 
 

@@ -346,6 +346,26 @@ class TestParseRecursiveStdout:
     def test_multi_indicator_max_pct(self) -> None:
         assert parse_recursive_stdout(RECURSIVE_TABLE) == {"rsi": 12.5, "ema": 3.0}
 
+    def test_real_rich_table_with_noise(self) -> None:
+        text = (
+            "Recursive Analysis\n"
+            "┏━━━━┳━━━━┓\n"
+            "┃ Indicators ┃ 199 ┃\n"
+            "│   ema_fast │ -0.000% │      - │\n"
+            "│   ema_slow │  0.001% │ 0.000% │\n"
+            "│        rsi │ -0.001% │ 0.000% │\n"
+            "2026-10-07 21:17:44,693 - freqtrade - INFO - Using fee 0.0500%\n"
+            "Startup candle 1999 ━━━━ 6/6 100% • 0:00:00\n"
+        )
+        assert parse_recursive_stdout(text) == {
+            "ema_fast": 0.0,
+            "ema_slow": 0.001,
+            "rsi": 0.001,
+        }
+
+    def test_negative_pct_uses_absolute(self) -> None:
+        assert parse_recursive_stdout("│ ind │ -12.5% │ 3.0% │\n") == {"ind": 12.5}
+
     def test_whitespace_table(self) -> None:
         text = "rsi  0.000%  12.500%\nmfi 1.000% 2.000%\n"
         assert parse_recursive_stdout(text) == {"rsi": 12.5, "mfi": 2.0}
