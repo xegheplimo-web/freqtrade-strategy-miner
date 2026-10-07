@@ -10,11 +10,14 @@ SRC = ROOT / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
-from strategy_miner.orchestrator import generate_batch
+# sys.path bootstrap must run before this import
+from strategy_miner.orchestrator import generate_batch  # noqa: E402
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Generate sample Freqtrade strategies from deterministic genomes.")
+    parser = argparse.ArgumentParser(
+        description="Generate sample Freqtrade strategies from deterministic genomes."
+    )
     parser.add_argument("--count", type=int, default=10, help="Number of candidates to generate")
     args = parser.parse_args()
 

@@ -1,0 +1,129 @@
+
+Best result:
+
+*   20/40:     39 trades. 23/0/16 Wins/Draws/Losses. Avg profit   0.45%. Median profit   0.12%. Total profit 16.87945687 USDT (   1.69%). Avg duration 0:12:00 min. Objective: -12.32298
+
+
+    # Buy parameters:
+    buy_params = {
+        "buy_rsi_long_max": 2,
+        "buy_rsi_short_min": 72,
+    }
+
+    # ROI parameters:
+    minimal_roi = {
+        "0": 0.168,
+        "20": 0.065,
+        "63": 0.023,
+        "75": 0
+    }
+
+    # Stoploss parameters:
+    stoploss = -0.041
+
+    # Trailing stop parameters:
+    trailing_stop = False  # value loaded from strategy
+    trailing_stop_positive = None  # value loaded from strategy
+    trailing_stop_positive_offset = 0.0  # value loaded from strategy
+    trailing_only_offset_is_reached = False  # value loaded from strategy
+    
+
+    # max_open_trades parameters:
+    max_open_trades = 10  # value loaded from strategy
+2026-10-07 21:50:08,102 - freqtrade - INFO - freqtrade 2026.9
+2026-10-07 21:50:08,653 - numexpr.utils - INFO - Note: NumExpr detected 24 cores but "NUMEXPR_MAX_THREADS" not set, so enforcing safe limit of 16.
+2026-10-07 21:50:08,654 - numexpr.utils - INFO - NumExpr defaulting to 16 threads.
+2026-10-07 21:50:10,244 - freqtrade.configuration.load_config - INFO - Using config: /freqtrade/user_data/config.miner.json ...
+2026-10-07 21:50:10,247 - freqtrade.loggers - INFO - Enabling colorized output.
+2026-10-07 21:50:10,248 - freqtrade.loggers - INFO - Logfile configured
+2026-10-07 21:50:10,248 - freqtrade.loggers - INFO - Verbosity set to 0
+2026-10-07 21:50:10,248 - freqtrade.configuration.configuration - INFO - Using additional Strategy lookup path: /freqtrade/user_data/strategies/generated
+2026-10-07 21:50:10,248 - freqtrade.configuration.configuration - INFO - Using max_open_trades: 10 ...
+2026-10-07 21:50:10,249 - freqtrade.configuration.configuration - INFO - Parameter --timerange detected: 20220101-20241231 ...
+2026-10-07 21:50:10,368 - freqtrade.configuration.configuration - INFO - Using user-data directory: /freqtrade/user_data ...
+2026-10-07 21:50:10,369 - freqtrade.configuration.configuration - INFO - Using data directory: /freqtrade/user_data/data/binance ...
+2026-10-07 21:50:10,369 - freqtrade.configuration.configuration - INFO - Parameter --epochs detected ... Will run Hyperopt with for 40 epochs ...
+2026-10-07 21:50:10,370 - freqtrade.configuration.configuration - INFO - Parameter -s/--spaces detected: ['buy', 'roi', 'stoploss']
+2026-10-07 21:50:10,370 - freqtrade.configuration.configuration - INFO - Parameter -j/--job-workers detected: -1
+2026-10-07 21:50:10,370 - freqtrade.configuration.configuration - INFO - Parameter --min-trades detected: 1
+2026-10-07 21:50:10,370 - freqtrade.configuration.configuration - INFO - Using Hyperopt loss class name: MultiMetricHyperOptLoss
+2026-10-07 21:50:10,370 - freqtrade.configuration.configuration - INFO - Filter trades by timerange: 20220101-20241231
+2026-10-07 21:50:10,371 - freqtrade.exchange.check_exchange - INFO - Checking exchange...
+2026-10-07 21:50:10,377 - freqtrade.exchange.check_exchange - INFO - Exchange "binance" is officially supported by the Freqtrade development team.
+2026-10-07 21:50:10,377 - freqtrade.configuration.configuration - INFO - Using pairlist from configuration.
+2026-10-07 21:50:10,377 - freqtrade.configuration.config_validation - INFO - Validating configuration ...
+2026-10-07 21:50:10,378 - freqtrade.commands.optimize_commands - INFO - Starting freqtrade in Hyperopt mode
+2026-10-07 21:50:10,381 - freqtrade.optimize.hyperopt.hyperopt - INFO - Removing `/freqtrade/user_data/hyperopt_results/hyperopt_tickerdata.pkl`.
+2026-10-07 21:50:10,384 - freqtrade.exchange.exchange - INFO - Instance is running with dry_run enabled
+2026-10-07 21:50:10,384 - freqtrade.exchange.exchange - INFO - Using CCXT 4.5.84
+2026-10-07 21:50:10,384 - freqtrade.exchange.exchange - INFO - Applying additional ccxt config: {'options': {'defaultType': 'swap'}}
+2026-10-07 21:50:10,386 - freqtrade.exchange.exchange - INFO - Applying additional ccxt config: {'options': {'defaultType': 'swap'}}
+2026-10-07 21:50:10,389 - freqtrade.exchange.exchange - INFO - Using Exchange "Binance"
+2026-10-07 21:50:11,352 - freqtrade.resolvers.exchange_resolver - INFO - Using resolved exchange class 'Binance' ...
+2026-10-07 21:50:11,393 - freqtrade.resolvers.iresolver - INFO - Using resolved strategy Miner_000001 from '/freqtrade/user_data/strategies/generated/Miner_000001.py'...
+2026-10-07 21:50:11,394 - freqtrade.strategy.hyper - INFO - Found no parameter file.
+2026-10-07 21:50:11,395 - freqtrade.resolvers.strategy_resolver - INFO - Override strategy 'timeframe' with value from the configuration: 5m.
+2026-10-07 21:50:11,395 - freqtrade.resolvers.strategy_resolver - INFO - Override strategy 'stake_currency' with value from the configuration: USDT.
+2026-10-07 21:50:11,395 - freqtrade.resolvers.strategy_resolver - INFO - Override strategy 'stake_amount' with value from the configuration: 100.
+2026-10-07 21:50:11,395 - freqtrade.resolvers.strategy_resolver - INFO - Override strategy 'unfilledtimeout' with value from the configuration: {'entry': 10, 'exit': 10, 'exit_timeout_count': 0, 
+'unit': 'minutes'}.
+2026-10-07 21:50:11,396 - freqtrade.resolvers.strategy_resolver - INFO - Override strategy 'max_open_trades' with value from the configuration: 10.
+2026-10-07 21:50:11,396 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using minimal_roi: {'0': 0.1, '60': 0.04, '180': 0.0}
+2026-10-07 21:50:11,396 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using timeframe: 5m
+2026-10-07 21:50:11,396 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using stoploss: -0.092
+2026-10-07 21:50:11,396 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using trailing_stop: False
+2026-10-07 21:50:11,397 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using trailing_stop_positive_offset: 0.0
+2026-10-07 21:50:11,397 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using trailing_only_offset_is_reached: False
+2026-10-07 21:50:11,397 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using use_custom_stoploss: False
+2026-10-07 21:50:11,397 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using process_only_new_candles: True
+2026-10-07 21:50:11,397 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using order_types: {'entry': 'limit', 'exit': 'limit', 'stoploss': 'limit', 'stoploss_on_exchange': False, 
+'stoploss_on_exchange_interval': 60}
+2026-10-07 21:50:11,398 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using order_time_in_force: {'entry': 'GTC', 'exit': 'GTC'}
+2026-10-07 21:50:11,398 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using stake_currency: USDT
+2026-10-07 21:50:11,398 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using stake_amount: 100
+2026-10-07 21:50:11,398 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using startup_candle_count: 300
+2026-10-07 21:50:11,398 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using unfilledtimeout: {'entry': 10, 'exit': 10, 'exit_timeout_count': 0, 'unit': 'minutes'}
+2026-10-07 21:50:11,398 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using use_exit_signal: True
+2026-10-07 21:50:11,399 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using exit_profit_only: False
+2026-10-07 21:50:11,399 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using ignore_roi_if_entry_signal: False
+2026-10-07 21:50:11,399 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using exit_profit_offset: 0.0
+2026-10-07 21:50:11,399 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using disable_dataframe_checks: False
+2026-10-07 21:50:11,399 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using ignore_buying_expired_candle_after: 0
+2026-10-07 21:50:11,400 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using position_adjustment_enable: False
+2026-10-07 21:50:11,400 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using max_entry_position_adjustment: -1
+2026-10-07 21:50:11,400 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using max_open_trades: 10
+2026-10-07 21:50:11,400 - freqtrade.configuration.config_validation - INFO - Validating configuration ...
+2026-10-07 21:50:11,406 - freqtrade.resolvers.iresolver - INFO - Using resolved pairlist StaticPairList from '/freqtrade/freqtrade/plugins/pairlist/StaticPairList.py'...
+2026-10-07 21:50:11,410 - freqtrade.optimize.backtesting - INFO - Using fee 0.0500% - worst case fee from exchange (lowest tier).
+2026-10-07 21:50:11,436 - freqtrade.strategy.hyper - INFO - No params for buy found, using default values.
+2026-10-07 21:50:11,436 - freqtrade.strategy.hyper - INFO - Strategy Parameter(default): buy_rsi_long_max = 29
+2026-10-07 21:50:11,436 - freqtrade.strategy.hyper - INFO - Strategy Parameter(default): buy_rsi_short_min = 59
+2026-10-07 21:50:11,440 - freqtrade.resolvers.iresolver - INFO - Using resolved hyperoptloss MultiMetricHyperOptLoss from '/freqtrade/freqtrade/optimize/hyperopt_loss/hyperopt_loss_multi_metric.py'...
+2026-10-07 21:50:11,759 - freqtrade.optimize.hyperopt.hyperopt_optimizer - INFO - manager queue <class 'multiprocessing.managers.AutoProxy[Queue]'>
+2026-10-07 21:50:11,760 - freqtrade.optimize.hyperopt.hyperopt - INFO - Using optimizer random state: 11621
+2026-10-07 21:50:11,760 - freqtrade.optimize.hyperopt.hyperopt_interface - INFO - Min roi table: {0: 0.03, 10: 0.02, 20: 0.01, 30: 0}
+2026-10-07 21:50:11,760 - freqtrade.optimize.hyperopt.hyperopt_interface - INFO - Max roi table: {0: 0.31, 40: 0.11, 100: 0.04, 220: 0}
+2026-10-07 21:50:11,806 - freqtrade.data.history.datahandlers.idatahandler - WARNING - BTC/USDT:USDT, futures, 5m, data starts at 2022-01-01 00:00:00
+2026-10-07 21:50:11,920 - freqtrade.data.history.datahandlers.idatahandler - WARNING - ETH/USDT:USDT, futures, 5m, data starts at 2022-01-01 00:00:00
+2026-10-07 21:50:12,009 - freqtrade.data.history.datahandlers.idatahandler - WARNING - SOL/USDT:USDT, futures, 5m, data starts at 2022-01-01 00:00:00
+2026-10-07 21:50:12,064 - freqtrade.optimize.backtesting - INFO - Loading data from 2022-01-01 00:00:00 up to 2024-12-31 00:00:00 (1095 days).
+2026-10-07 21:50:12,065 - freqtrade.configuration.timerange - WARNING - Moving start-date by 300 candles to account for startup time.
+2026-10-07 21:50:16,239 - freqtrade.optimize.hyperopt.hyperopt_optimizer - INFO - Dataload complete. Calculating indicators
+2026-10-07 21:50:16,351 - freqtrade.optimize.hyperopt.hyperopt_optimizer - INFO - Hyperopting with data from 2022-01-02 01:00:00 up to 2024-12-31 00:00:00 (1093 days)..
+2026-10-07 21:50:17,102 - freqtrade.optimize.hyperopt.hyperopt - INFO - Found 24 CPU cores. Let's make them scream!
+2026-10-07 21:50:17,102 - freqtrade.optimize.hyperopt.hyperopt - INFO - Number of parallel jobs set as: -1
+2026-10-07 21:50:17,103 - freqtrade.optimize.hyperopt.hyperopt_optimizer - INFO - Using optuna sampler NSGAIIISampler.
+[I 2026-10-07 21:50:17,103] A new study created in memory with name: no-name-22335be7-d343-41dd-8438-7083647f9aa1
+2026-10-07 21:50:17,105 - freqtrade.optimize.hyperopt.hyperopt - INFO - Effective number of parallel workers used: 24
+                                                                                           Hyperopt results                                                                                             
+                           ┏━━━━━━━━┳━━━━━━━┳━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━┓                            
+                           ┃ Best   ┃ Epoch ┃ Trades ┃  Win  Draw  Loss  Win% ┃ Avg profit ┃                   Profit ┃ Avg duration ┃ Objective ┃     Max Drawdown (Acct) ┃                            
+                           ┡━━━━━━━━╇━━━━━━━╇━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━┩                            
+                           │ * Best │  1/40 │   9111 │ 2772     0  6339  30.4 │     -0.10% │ -808.448 USDT  (-80.84%) │      1:06:00 │  23.92244 │ 808.978 USDT   (80.86%) │                            
+                           │ * Best │  2/40 │     37 │   13     0    24  35.1 │     -0.02% │   -0.498 USDT   (-0.05%) │      0:12:00 │   0.07280 │   5.313 USDT    (0.53%) │                            
+                           │ * Best │  4/40 │     39 │   17     0    22  43.6 │      0.22% │    8.640 USDT    (0.86%) │      0:12:00 │  -3.10738 │   4.646 USDT    (0.46%) │                            
+                           │ * Best │ 20/40 │     39 │   23     0    16  59.0 │      0.45% │   16.879 USDT    (1.69%) │      0:12:00 │ -12.32298 │   3.539 USDT    (0.35%) │                            
+                           └────────┴───────┴────────┴────────────────────────┴────────────┴──────────────────────────┴──────────────┴───────────┴─────────────────────────┘                            
+Epochs ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 40/40 100% • 0:00:53 • 0:00:00
+2026-10-07 21:51:10,222 - freqtrade.optimize.hyperopt.hyperopt - INFO - 40 epochs saved to '/freqtrade/user_data/hyperopt_results/strategy_Miner_000001_2026-10-07_21-50-10.fthypt'.
+2026-10-07 21:51:10,284 - freqtrade.optimize.hyperopt_tools - INFO - Dumping parameters to /freqtrade/user_data/strategies/generated/Miner_000001.json

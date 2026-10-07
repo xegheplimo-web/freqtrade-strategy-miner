@@ -1,0 +1,56 @@
+2026-10-07 19:54:49,812 - freqtrade - INFO - freqtrade 2026.9
+2026-10-07 19:54:50,283 - numexpr.utils - INFO - Note: NumExpr detected 24 cores but "NUMEXPR_MAX_THREADS" not set, so enforcing safe limit of 16.
+2026-10-07 19:54:50,284 - numexpr.utils - INFO - NumExpr defaulting to 16 threads.
+2026-10-07 19:54:51,377 - freqtrade.configuration.load_config - INFO - Using config: /freqtrade/user_data/config.miner.json ...
+2026-10-07 19:54:51,380 - freqtrade.loggers - INFO - Enabling colorized output.
+2026-10-07 19:54:51,380 - freqtrade.loggers - INFO - Logfile configured
+2026-10-07 19:54:51,380 - freqtrade.loggers - INFO - Verbosity set to 0
+2026-10-07 19:54:51,381 - freqtrade.configuration.configuration - INFO - Parameter --timerange detected: 20220101-20260930 ...
+2026-10-07 19:54:51,438 - freqtrade.configuration.configuration - INFO - Using user-data directory: /freqtrade/user_data ...
+2026-10-07 19:54:51,440 - freqtrade.configuration.directory_operations - INFO - Created data directory: None
+2026-10-07 19:54:51,441 - freqtrade.configuration.configuration - INFO - Using data directory: /freqtrade/user_data/data/binance ...
+2026-10-07 19:54:51,441 - freqtrade.configuration.configuration - INFO - timeframes --timeframes: ['5m']
+2026-10-07 19:54:51,441 - freqtrade.configuration.configuration - INFO - Filter trades by timerange: 20220101-20260930
+2026-10-07 19:54:51,442 - freqtrade.exchange.check_exchange - INFO - Checking exchange...
+2026-10-07 19:54:51,447 - freqtrade.exchange.check_exchange - INFO - Exchange "binance" is officially supported by the Freqtrade development team.
+2026-10-07 19:54:51,447 - freqtrade.configuration.configuration - INFO - Using pairlist from configuration.
+2026-10-07 19:54:51,447 - freqtrade.configuration.config_validation - INFO - Validating configuration ...
+2026-10-07 19:54:52,092 - freqtrade.exchange.exchange - INFO - Instance is running with dry_run enabled
+2026-10-07 19:54:52,092 - freqtrade.exchange.exchange - INFO - Using CCXT 4.5.84
+2026-10-07 19:54:52,092 - freqtrade.exchange.exchange - INFO - Applying additional ccxt config: {'options': {'defaultType': 'swap'}}
+2026-10-07 19:54:52,095 - freqtrade.exchange.exchange - INFO - Applying additional ccxt config: {'options': {'defaultType': 'swap'}}
+2026-10-07 19:54:52,097 - freqtrade.exchange.exchange - INFO - Using Exchange "Binance"
+2026-10-07 19:54:52,097 - freqtrade.resolvers.exchange_resolver - INFO - Using resolved exchange class 'Binance' ...
+2026-10-07 19:54:52,098 - freqtrade.exchange.exchange - INFO - Markets were not loaded. Loading them now..
+2026-10-07 19:54:53,012 - freqtrade.data.history.history_utils - INFO - About to download pairs: ['BTC/USDT:USDT', 'ETH/USDT:USDT', 'SOL/USDT:USDT'], intervals: ['5m'] to 
+/freqtrade/user_data/data/binance
+2026-10-07 19:54:53,038 - freqtrade.data.history.history_utils - INFO - Download history data for "BTC/USDT:USDT", 5m, futures and store in /freqtrade/user_data/data/binance. From 2022-01-01T00:00:00 
+to 2026-09-30T00:00:00
+2026-10-07 19:54:56,977 - freqtrade.data.history.history_utils - INFO - Downloaded data for BTC/USDT:USDT, 5m, futures with length 499104.
+2026-10-07 19:54:57,212 - freqtrade.data.history.history_utils - INFO - Download history data for "BTC/USDT:USDT", 1h, mark and store in /freqtrade/user_data/data/binance. From 2022-01-01T00:00:00 to 
+2026-09-30T00:00:00
+2026-10-07 19:55:05,918 - freqtrade.data.history.history_utils - INFO - Downloaded data for BTC/USDT:USDT, 1h, mark with length 41779.
+2026-10-07 19:55:05,946 - freqtrade.data.history.history_utils - INFO - Download history data for "BTC/USDT:USDT", 1h, funding_rate and store in /freqtrade/user_data/data/binance. From 
+2022-01-01T00:00:00 to 2026-09-30T00:00:00
+2026-10-07 19:55:08,201 - freqtrade.data.history.history_utils - INFO - Downloaded data for BTC/USDT:USDT, 1h, funding_rate with length 5223.
+2026-10-07 19:55:08,214 - freqtrade.data.history.history_utils - INFO - Download history data for "ETH/USDT:USDT", 5m, futures and store in /freqtrade/user_data/data/binance. From 2022-01-01T00:00:00 
+to 2026-09-30T00:00:00
+2026-10-07 19:55:12,034 - freqtrade.data.history.history_utils - INFO - Downloaded data for ETH/USDT:USDT, 5m, futures with length 499104.
+2026-10-07 19:55:12,301 - freqtrade.data.history.history_utils - INFO - Download history data for "ETH/USDT:USDT", 1h, mark and store in /freqtrade/user_data/data/binance. From 2022-01-01T00:00:00 to 
+2026-09-30T00:00:00
+2026-10-07 19:55:21,167 - freqtrade.data.history.history_utils - INFO - Downloaded data for ETH/USDT:USDT, 1h, mark with length 41779.
+2026-10-07 19:55:21,195 - freqtrade.data.history.history_utils - INFO - Download history data for "ETH/USDT:USDT", 1h, funding_rate and store in /freqtrade/user_data/data/binance. From 
+2022-01-01T00:00:00 to 2026-09-30T00:00:00
+2026-10-07 19:55:23,450 - freqtrade.data.history.history_utils - INFO - Downloaded data for ETH/USDT:USDT, 1h, funding_rate with length 5223.
+2026-10-07 19:55:23,463 - freqtrade.data.history.history_utils - INFO - Download history data for "SOL/USDT:USDT", 5m, futures and store in /freqtrade/user_data/data/binance. From 2022-01-01T00:00:00 
+to 2026-09-30T00:00:00
+2026-10-07 19:55:27,253 - freqtrade.data.history.history_utils - INFO - Downloaded data for SOL/USDT:USDT, 5m, futures with length 499104.
+2026-10-07 19:55:27,534 - freqtrade.data.history.history_utils - INFO - Download history data for "SOL/USDT:USDT", 1h, mark and store in /freqtrade/user_data/data/binance. From 2022-01-01T00:00:00 to 
+2026-09-30T00:00:00
+2026-10-07 19:55:36,251 - freqtrade.data.history.history_utils - INFO - Downloaded data for SOL/USDT:USDT, 1h, mark with length 41779.
+2026-10-07 19:55:36,284 - freqtrade.data.history.history_utils - INFO - Download history data for "SOL/USDT:USDT", 1h, funding_rate and store in /freqtrade/user_data/data/binance. From 
+2022-01-01T00:00:00 to 2026-09-30T00:00:00
+2026-10-07 19:55:38,545 - freqtrade.data.history.history_utils - INFO - Downloaded data for SOL/USDT:USDT, 1h, funding_rate with length 5298.
+Timeframe                 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 3/3 100% • 0:00:15 • 0:00:00
+Downloading SOL/USDT:USDT ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 3/3 100% • 0:00:45 • 0:00:00
+DL_EXIT=0

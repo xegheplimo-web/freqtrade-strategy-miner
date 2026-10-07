@@ -4,7 +4,8 @@ Mẫu kiến trúc để tự động hóa pipeline:
 
 `Generate → Freqtrade Backtest → Score → Shortlist → Hyperopt → Validation → Bias Checks → Walk-forward → Champion`
 
-> Đây là **starter template**, không phải bot live-ready. Mặc định không chứa API key và không tự gửi lệnh giao dịch.
+> Pipeline production ở §6 đã được **triển khai đầy đủ + nghiệm thu E2E live** — xem §10.
+> Repo không chứa API key và không tự gửi lệnh giao dịch; champion chỉ là artifact kèm hướng dẫn dry-run.
 
 ## 1. Mục tiêu
 
@@ -208,3 +209,30 @@ Chạy demo sinh strategy:
 ```powershell
 python scripts/run_demo.py --count 10
 ```
+
+## 10. Trạng thái triển khai
+
+Pipeline production ở §6 đã được **triển khai đầy đủ** và **nghiệm thu E2E live** trên
+docker `freqtradeorg/freqtrade:stable` (2026.9) với dữ liệu riêng (499.104 nến/pair):
+
+- **CLI**: `python -m strategy_miner <command>` — `generate` · `data-download` · `data-audit` ·
+  `fast-gate` · `hyperopt` · `validate` · `bias` · `walk-forward` · `robust` · `final` ·
+  `report` · `status` · `run` (one-shot). (`--root`/`--config` là global arg — đứng trước
+  subcommand; `--ids`/`--epochs`/`--force` là per-subcommand.)
+- **Stage modules**: `src/strategy_miner/pipeline/` (`fast_gate` · `refine` · `checks` ·
+  `robustness`).
+- **Kiểm thử**: `231 passed` (+552 subtests), ruff clean — chạy tự động qua CI (GitHub Actions).
+- **Nghiệm thu E2E (T-301)**: cả 7 stage chạy live (hyperopt 5/5 passed · walk-forward 55 fold
+  runs · robustness 20 runs); champion path được chứng minh
+  (`output/champions/Miner_000004/` — pf 1.218, expectancy +0.0143, kèm hướng dẫn dry-run).
+  Cohort production bị reject đúng bởi gate — 2 hạng mục tuning đang mở (xem
+  `docs/orchestration-process.md` §4).
+
+## 11. Quy trình phát triển (orchestration)
+
+Dự án được xây theo quy trình multi-agent có control-plane (`.orchestrator/`): split theo độ
+khó (Devin/Cline/OpenCode) → chạy song song trong worktree riêng → orchestrator kiểm chứng
+độc lập + micro-probe live từng stage → merge `--no-ff` → E2E acceptance.
+
+Bản đồ đầy đủ (vai trò, wave, defect bắt được, evidence, quyết định D-001…D-016):
+[`docs/orchestration-process.md`](docs/orchestration-process.md).

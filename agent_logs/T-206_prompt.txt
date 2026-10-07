@@ -1,0 +1,78 @@
+# T-206 — Compiler: emit hyperoptable parameters (buy space) + hyperopt spaces fix
+
+**Agent**: devin · **Wave**: 3 · **Base**: main @ 4cc1f5e · **Scope**: 4 files ONLY
+
+## Context
+
+Live verification found: `hyperopt --spaces buy sell roi stoploss` FAILS on compiled
+strategies — freqtrade rejects a space with no parameters:
+
+```
+The 'buy' space is included into the hyperoptimization but no parameter for this
+space was found in your Strategy.
+```
+
+Root cause: `compiler.py` hardcodes every numeric value; generated strategies expose
+NO hyperoptable parameters. Stage 4 (hyperopt) is therefore broken on real runs.
+
+## Design (FROZEN — implement exactly this, no redesign)
+
+### 1) `src/strategy_miner/compiler.py`
+
+- Import: `from freqtrade.strategy import IStrategy, IntParameter`
+- Add class attributes (after `use_exit_signal = True`, before methods):
+
+```python
+    buy_rsi_long_max = IntParameter(1, 49, default={rsi_long_max}, space="buy")
+    buy_rsi_short_min = IntParameter(51, 99, default={rsi_short_min}, space="buy")
+```
+
+- Entry conditions must use the parameters:
+
+```python
+            (dataframe["rsi"] < self.buy_rsi_long_max.value) &
+            ...
+            (dataframe["rsi"] > self.buy_rsi_short_min.value) &
+```
+
+- Keep everything else byte-identical: minimal_roi dict, stoploss value, exit logic
+  (signal flips), indicators (periods stay genome-fixed — indicators are computed once;
+  only thresholds are tunable). Defaults MUST equal the genome values so behavior is
+  unchanged when no hyperopt sidecar is present.
+- ROI + stoploss spaces need no strategy params (freqtrade provides default
+  `roi_space()` / `stoploss_space()` implementations).
+- Update the module/`compile_strategy` docstring with one line: generated strategies
+  expose buy-space IntParameters (entry RSI thresholds); roi/stoploss spaces use
+  freqtrade defaults; sell space intentionally unused (exits are signal flips).
+
+### 2) `src/strategy_miner/pipeline/refine.py`
+
+- In `hyperopt_args`, change `--spaces` list from `"buy", "sell", "roi", "stoploss"`
+  to `"buy", "roi", "stoploss"` (remove "sell" — compiled strategies define no sell
+  params; freqtrade rejects empty spaces). Add a one-line comment saying why.
+
+### 3) Tests
+
+- `tests/test_pipeline_refine.py` (~line 247): update the pinned argv to
+  `"buy", "roi", "stoploss"`.
+- `tests/test_generation.py`: add a test asserting, for a generated genome:
+  - source contains `IntParameter(1, 49, default=<genome.rsi_long_max>, space="buy")`
+    and `IntParameter(51, 99, default=<genome.rsi_short_min>, space="buy")`
+  - source contains `self.buy_rsi_long_max.value` and `self.buy_rsi_short_min.value`
+  - `ast.parse(source)` still OK (existing test keeps covering this)
+- Do NOT touch any other test file; do NOT regenerate repo fixture files.
+
+## Acceptance criteria
+
+1. `pytest -q` full suite green (baseline 197 + your additions); no regressions.
+2. `ruff check` clean on the two changed source files + two test files.
+3. `python -c` smoke: `compile_strategy(GenomeGenerator(seed=42).generate_one(1))`
+   contains the two IntParameter lines with correct defaults, ast-parses.
+4. `git status --porcelain` shows ONLY the 4 scoped files.
+5. No files outside scope; no design changes; report honest issues in
+   `agent_logs/T-206_result.json`.
+
+## Report
+
+Write `agent_logs/T-206_result.json` (same schema as previous tasks: status, task,
+agent, files_changed, tests_run, tests_passed, issues, blocker, summary). English.

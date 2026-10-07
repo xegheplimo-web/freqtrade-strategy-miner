@@ -1,0 +1,79 @@
+                                                                      Lookahead Analysis                                                                       
+┏━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┓
+┃        filename ┃     strategy ┃                                  has_bias ┃ total_signals ┃ biased_entry_signals ┃ biased_exit_signals ┃ biased_indicators ┃
+┡━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━┩
+│ Miner_000003.py │ Miner_000003 │ too few trades caught (0/10).Test failed. │               │                      │                     │                   │
+└─────────────────┴──────────────┴───────────────────────────────────────────┴───────────────┴──────────────────────┴─────────────────────┴───────────────────┘
+2026-10-07 21:57:12,304 - freqtrade - INFO - freqtrade 2026.9
+2026-10-07 21:57:12,521 - numexpr.utils - INFO - Note: NumExpr detected 24 cores but "NUMEXPR_MAX_THREADS" not set, so enforcing safe limit of 16.
+2026-10-07 21:57:12,521 - numexpr.utils - INFO - NumExpr defaulting to 16 threads.
+2026-10-07 21:57:13,572 - freqtrade.configuration.load_config - INFO - Using config: /freqtrade/user_data/config.miner.json ...
+2026-10-07 21:57:13,575 - freqtrade.loggers - INFO - Enabling colorized output.
+2026-10-07 21:57:13,576 - freqtrade.loggers - INFO - Logfile configured
+2026-10-07 21:57:13,576 - freqtrade.loggers - INFO - Verbosity set to 0
+2026-10-07 21:57:13,576 - freqtrade.configuration.configuration - INFO - Using additional Strategy lookup path: /freqtrade/user_data/strategies/generated
+2026-10-07 21:57:13,576 - freqtrade.configuration.configuration - INFO - Parameter --timerange detected: 20250401-20250701 ...
+2026-10-07 21:57:13,718 - freqtrade.configuration.configuration - INFO - Using user-data directory: /freqtrade/user_data ...
+2026-10-07 21:57:13,719 - freqtrade.configuration.configuration - INFO - Using data directory: /freqtrade/user_data/data/binance ...
+2026-10-07 21:57:13,719 - freqtrade.configuration.configuration - INFO - Saving lookahead analysis results into /freqtrade/user_data/analysis/lookahead_Miner_000003.csv ...
+2026-10-07 21:57:13,720 - freqtrade.configuration.configuration - INFO - Filter trades by timerange: 20250401-20250701
+2026-10-07 21:57:13,720 - freqtrade.configuration.configuration - INFO - Path to store lookahead-analysis-results: /freqtrade/user_data/analysis/lookahead_Miner_000003.csv
+2026-10-07 21:57:13,720 - freqtrade.exchange.check_exchange - INFO - Checking exchange...
+2026-10-07 21:57:13,726 - freqtrade.exchange.check_exchange - INFO - Exchange "binance" is officially supported by the Freqtrade development team.
+2026-10-07 21:57:13,726 - freqtrade.configuration.configuration - INFO - Using pairlist from configuration.
+2026-10-07 21:57:13,726 - freqtrade.configuration.config_validation - INFO - Validating configuration ...
+2026-10-07 21:57:13,727 - freqtrade.optimize.analysis.lookahead_helpers - INFO - Forced order_types to market orders.
+2026-10-07 21:57:13,727 - freqtrade.optimize.analysis.lookahead_helpers - INFO - Forced max_open_trades to -1 (same amount as there are pairs)
+2026-10-07 21:57:13,728 - freqtrade.optimize.analysis.lookahead_helpers - INFO - Dry run wallet was not set to 1 billion, pushing it up there just to avoid false positives
+2026-10-07 21:57:13,728 - freqtrade.optimize.analysis.lookahead_helpers - INFO - fixing stake_amount to 10k
+2026-10-07 21:57:13,808 - freqtrade.optimize.analysis.lookahead_helpers - INFO - Bias test of Miner_000003.py started.
+2026-10-07 21:57:13,809 - freqtrade.exchange.exchange - INFO - Instance is running with dry_run enabled
+2026-10-07 21:57:13,809 - freqtrade.exchange.exchange - INFO - Using CCXT 4.5.84
+2026-10-07 21:57:13,809 - freqtrade.exchange.exchange - INFO - Applying additional ccxt config: {'options': {'defaultType': 'swap'}}
+2026-10-07 21:57:13,812 - freqtrade.exchange.exchange - INFO - Applying additional ccxt config: {'options': {'defaultType': 'swap'}}
+2026-10-07 21:57:13,814 - freqtrade.exchange.exchange - INFO - Using Exchange "Binance"
+2026-10-07 21:57:14,698 - freqtrade.resolvers.exchange_resolver - INFO - Using resolved exchange class 'Binance' ...
+2026-10-07 21:57:14,727 - freqtrade.resolvers.iresolver - INFO - Using resolved strategy Miner_000003 from '/freqtrade/user_data/strategies/generated/Miner_000003.py'...
+2026-10-07 21:57:14,729 - freqtrade.strategy.hyper - INFO - Loading parameters from file /freqtrade/user_data/strategies/generated/Miner_000003.json
+2026-10-07 21:57:14,732 - freqtrade.resolvers.strategy_resolver - INFO - Override strategy 'timeframe' with value from the configuration: 5m.
+2026-10-07 21:57:14,732 - freqtrade.resolvers.strategy_resolver - INFO - Override strategy 'order_types' with value from the configuration: {'entry': 'market', 'exit': 'market', 'stoploss': 'market', 
+'stoploss_on_exchange': False}.
+2026-10-07 21:57:14,732 - freqtrade.resolvers.strategy_resolver - INFO - Override strategy 'stake_currency' with value from the configuration: USDT.
+2026-10-07 21:57:14,733 - freqtrade.resolvers.strategy_resolver - INFO - Override strategy 'stake_amount' with value from the configuration: 10000.
+2026-10-07 21:57:14,733 - freqtrade.resolvers.strategy_resolver - INFO - Override strategy 'unfilledtimeout' with value from the configuration: {'entry': 10, 'exit': 10, 'exit_timeout_count': 0, 
+'unit': 'minutes'}.
+2026-10-07 21:57:14,733 - freqtrade.resolvers.strategy_resolver - INFO - Override strategy 'max_open_trades' with value from the configuration: -1.
+2026-10-07 21:57:14,733 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using minimal_roi: {'0': 0.153, '28': 0.078, '73': 0.026, '163': 0}
+2026-10-07 21:57:14,733 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using timeframe: 5m
+2026-10-07 21:57:14,734 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using stoploss: -0.234
+2026-10-07 21:57:14,734 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using trailing_stop: False
+2026-10-07 21:57:14,734 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using trailing_stop_positive_offset: 0.0
+2026-10-07 21:57:14,734 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using trailing_only_offset_is_reached: False
+2026-10-07 21:57:14,734 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using use_custom_stoploss: False
+2026-10-07 21:57:14,734 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using process_only_new_candles: True
+2026-10-07 21:57:14,735 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using order_types: {'entry': 'market', 'exit': 'market', 'stoploss': 'market', 'stoploss_on_exchange': False}
+2026-10-07 21:57:14,735 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using order_time_in_force: {'entry': 'GTC', 'exit': 'GTC'}
+2026-10-07 21:57:14,735 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using stake_currency: USDT
+2026-10-07 21:57:14,735 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using stake_amount: 10000
+2026-10-07 21:57:14,735 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using startup_candle_count: 300
+2026-10-07 21:57:14,736 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using unfilledtimeout: {'entry': 10, 'exit': 10, 'exit_timeout_count': 0, 'unit': 'minutes'}
+2026-10-07 21:57:14,736 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using use_exit_signal: True
+2026-10-07 21:57:14,736 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using exit_profit_only: False
+2026-10-07 21:57:14,736 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using ignore_roi_if_entry_signal: False
+2026-10-07 21:57:14,736 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using exit_profit_offset: 0.0
+2026-10-07 21:57:14,736 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using disable_dataframe_checks: False
+2026-10-07 21:57:14,737 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using ignore_buying_expired_candle_after: 0
+2026-10-07 21:57:14,737 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using position_adjustment_enable: False
+2026-10-07 21:57:14,737 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using max_entry_position_adjustment: -1
+2026-10-07 21:57:14,737 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using max_open_trades: -1
+2026-10-07 21:57:14,737 - freqtrade.configuration.config_validation - INFO - Validating configuration ...
+2026-10-07 21:57:14,740 - freqtrade.resolvers.iresolver - INFO - Using resolved pairlist StaticPairList from '/freqtrade/freqtrade/plugins/pairlist/StaticPairList.py'...
+2026-10-07 21:57:14,744 - freqtrade.optimize.backtesting - INFO - Using fee 0.0500% - worst case fee from exchange (lowest tier).
+2026-10-07 21:57:14,757 - freqtrade.strategy.hyper - INFO - Strategy Parameter: buy_rsi_long_max = 4
+2026-10-07 21:57:14,757 - freqtrade.strategy.hyper - INFO - Strategy Parameter: buy_rsi_short_min = 76
+2026-10-07 21:57:14,895 - freqtrade.optimize.backtesting - INFO - Loading data from 2025-03-30 23:00:00 up to 2025-07-01 00:00:00 (92 days).
+2026-10-07 21:57:15,657 - freqtrade.loggers.set_log_levels - INFO - Reducing verbosity for bias tester.
+2026-10-07 21:57:15,658 - freqtrade.optimize.analysis.lookahead - INFO - found 1 trades which is less than minimum_trade_amount 10. Cancelling this backtest lookahead bias test.
+2026-10-07 21:57:15,659 - freqtrade.optimize.analysis.lookahead_helpers - INFO - Checking look ahead bias via backtests of Miner_000003.py took 2 seconds.
+
+2026-10-07 21:57:15,666 - freqtrade.optimize.analysis.lookahead_helpers - INFO - saving /freqtrade/user_data/analysis/lookahead_Miner_000003.csv

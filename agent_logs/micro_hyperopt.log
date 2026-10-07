@@ -1,0 +1,70 @@
+2026-10-07 21:08:51,631 - freqtrade - INFO - freqtrade 2026.9
+2026-10-07 21:08:52,040 - numexpr.utils - INFO - Note: NumExpr detected 24 cores but "NUMEXPR_MAX_THREADS" not set, so enforcing safe limit of 16.
+2026-10-07 21:08:52,040 - numexpr.utils - INFO - NumExpr defaulting to 16 threads.
+2026-10-07 21:08:53,324 - freqtrade.configuration.load_config - INFO - Using config: /freqtrade/user_data/config.miner.json ...
+2026-10-07 21:08:53,328 - freqtrade.loggers - INFO - Enabling colorized output.
+2026-10-07 21:08:53,328 - freqtrade.loggers - INFO - Logfile configured
+2026-10-07 21:08:53,328 - freqtrade.loggers - INFO - Verbosity set to 0
+2026-10-07 21:08:53,328 - freqtrade.configuration.configuration - INFO - Using additional Strategy lookup path: /freqtrade/user_data/strategies/generated
+2026-10-07 21:08:53,329 - freqtrade.configuration.configuration - INFO - Using max_open_trades: 10 ...
+2026-10-07 21:08:53,329 - freqtrade.configuration.configuration - INFO - Parameter --timerange detected: 20240101-20240301 ...
+2026-10-07 21:08:53,403 - freqtrade.configuration.configuration - INFO - Using user-data directory: /freqtrade/user_data ...
+2026-10-07 21:08:53,404 - freqtrade.configuration.configuration - INFO - Using data directory: /freqtrade/user_data/data/binance ...
+2026-10-07 21:08:53,404 - freqtrade.configuration.configuration - INFO - Parameter --epochs detected ... Will run Hyperopt with for 8 epochs ...
+2026-10-07 21:08:53,404 - freqtrade.configuration.configuration - INFO - Parameter -s/--spaces detected: ['buy', 'sell', 'roi', 'stoploss']
+2026-10-07 21:08:53,405 - freqtrade.configuration.configuration - INFO - Parameter -j/--job-workers detected: -1
+2026-10-07 21:08:53,405 - freqtrade.configuration.configuration - INFO - Parameter --min-trades detected: 1
+2026-10-07 21:08:53,405 - freqtrade.configuration.configuration - INFO - Using Hyperopt loss class name: MultiMetricHyperOptLoss
+2026-10-07 21:08:53,405 - freqtrade.configuration.configuration - INFO - Filter trades by timerange: 20240101-20240301
+2026-10-07 21:08:53,406 - freqtrade.exchange.check_exchange - INFO - Checking exchange...
+2026-10-07 21:08:53,411 - freqtrade.exchange.check_exchange - INFO - Exchange "binance" is officially supported by the Freqtrade development team.
+2026-10-07 21:08:53,411 - freqtrade.configuration.configuration - INFO - Using pairlist from configuration.
+2026-10-07 21:08:53,412 - freqtrade.configuration.config_validation - INFO - Validating configuration ...
+2026-10-07 21:08:53,413 - freqtrade.commands.optimize_commands - INFO - Starting freqtrade in Hyperopt mode
+2026-10-07 21:08:53,417 - freqtrade.exchange.exchange - INFO - Instance is running with dry_run enabled
+2026-10-07 21:08:53,417 - freqtrade.exchange.exchange - INFO - Using CCXT 4.5.84
+2026-10-07 21:08:53,417 - freqtrade.exchange.exchange - INFO - Applying additional ccxt config: {'options': {'defaultType': 'swap'}}
+2026-10-07 21:08:53,419 - freqtrade.exchange.exchange - INFO - Applying additional ccxt config: {'options': {'defaultType': 'swap'}}
+2026-10-07 21:08:53,421 - freqtrade.exchange.exchange - INFO - Using Exchange "Binance"
+2026-10-07 21:08:54,340 - freqtrade.resolvers.exchange_resolver - INFO - Using resolved exchange class 'Binance' ...
+2026-10-07 21:08:54,371 - freqtrade.resolvers.iresolver - INFO - Using resolved strategy Miner_000001 from '/freqtrade/user_data/strategies/generated/Miner_000001.py'...
+2026-10-07 21:08:54,372 - freqtrade.strategy.hyper - INFO - Found no parameter file.
+2026-10-07 21:08:54,372 - freqtrade.resolvers.strategy_resolver - INFO - Override strategy 'timeframe' with value from the configuration: 5m.
+2026-10-07 21:08:54,373 - freqtrade.resolvers.strategy_resolver - INFO - Override strategy 'stake_currency' with value from the configuration: USDT.
+2026-10-07 21:08:54,373 - freqtrade.resolvers.strategy_resolver - INFO - Override strategy 'stake_amount' with value from the configuration: 100.
+2026-10-07 21:08:54,373 - freqtrade.resolvers.strategy_resolver - INFO - Override strategy 'unfilledtimeout' with value from the configuration: {'entry': 10, 'exit': 10, 'exit_timeout_count': 0, 
+'unit': 'minutes'}.
+2026-10-07 21:08:54,373 - freqtrade.resolvers.strategy_resolver - INFO - Override strategy 'use_exit_signal' with value from the configuration: True.
+2026-10-07 21:08:54,373 - freqtrade.resolvers.strategy_resolver - INFO - Override strategy 'max_open_trades' with value from the configuration: 10.
+2026-10-07 21:08:54,374 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using minimal_roi: {'0': 0.1, '60': 0.04, '180': 0.0}
+2026-10-07 21:08:54,374 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using timeframe: 5m
+2026-10-07 21:08:54,374 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using stoploss: -0.092
+2026-10-07 21:08:54,374 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using trailing_stop: False
+2026-10-07 21:08:54,374 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using trailing_stop_positive_offset: 0.0
+2026-10-07 21:08:54,375 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using trailing_only_offset_is_reached: False
+2026-10-07 21:08:54,375 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using use_custom_stoploss: False
+2026-10-07 21:08:54,375 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using process_only_new_candles: True
+2026-10-07 21:08:54,375 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using order_types: {'entry': 'limit', 'exit': 'limit', 'stoploss': 'limit', 'stoploss_on_exchange': False, 
+'stoploss_on_exchange_interval': 60}
+2026-10-07 21:08:54,375 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using order_time_in_force: {'entry': 'GTC', 'exit': 'GTC'}
+2026-10-07 21:08:54,376 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using stake_currency: USDT
+2026-10-07 21:08:54,376 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using stake_amount: 100
+2026-10-07 21:08:54,376 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using startup_candle_count: 300
+2026-10-07 21:08:54,376 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using unfilledtimeout: {'entry': 10, 'exit': 10, 'exit_timeout_count': 0, 'unit': 'minutes'}
+2026-10-07 21:08:54,376 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using use_exit_signal: True
+2026-10-07 21:08:54,376 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using exit_profit_only: False
+2026-10-07 21:08:54,377 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using ignore_roi_if_entry_signal: False
+2026-10-07 21:08:54,377 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using exit_profit_offset: 0.0
+2026-10-07 21:08:54,377 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using disable_dataframe_checks: False
+2026-10-07 21:08:54,377 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using ignore_buying_expired_candle_after: 0
+2026-10-07 21:08:54,377 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using position_adjustment_enable: False
+2026-10-07 21:08:54,378 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using max_entry_position_adjustment: -1
+2026-10-07 21:08:54,378 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using max_open_trades: 10
+2026-10-07 21:08:54,378 - freqtrade.configuration.config_validation - INFO - Validating configuration ...
+2026-10-07 21:08:54,381 - freqtrade.resolvers.iresolver - INFO - Using resolved pairlist StaticPairList from '/freqtrade/freqtrade/plugins/pairlist/StaticPairList.py'...
+2026-10-07 21:08:54,385 - freqtrade.optimize.backtesting - INFO - Using fee 0.0500% - worst case fee from exchange (lowest tier).
+2026-10-07 21:08:54,401 - freqtrade.resolvers.iresolver - INFO - Using resolved hyperoptloss MultiMetricHyperOptLoss from '/freqtrade/freqtrade/optimize/hyperopt_loss/hyperopt_loss_multi_metric.py'...
+2026-10-07 21:08:54,709 - freqtrade.optimize.hyperopt.hyperopt_optimizer - INFO - manager queue <class 'multiprocessing.managers.AutoProxy[Queue]'>
+2026-10-07 21:08:54,710 - freqtrade.optimize.hyperopt.hyperopt - INFO - Using optimizer random state: 17603
+2026-10-07 21:08:54,711 - freqtrade - ERROR - The 'buy' space is included into the hyperoptimization but no parameter for this space was found in your Strategy. Please make sure to have parameters for
+this space enabled for optimization or remove the 'buy' space from hyperoptimization.
