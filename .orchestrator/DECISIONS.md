@@ -85,3 +85,45 @@ One entry per binding decision. Newest at the bottom. Frozen interfaces/names ch
   re-dispatched to another agent.
 - Wave-2 launch mitigation: raise agent timeout budget (`cline -t 2700`) for cards >= 100
   lines and require files-first ordering (already in cards).
+
+## D-011 — config.example.json expanded to a valid backtesting base
+- fast_gate live smoke failed (`KeyError: 'exit_pricing'`, exit 1, no artifact). Root cause:
+  `sync_ft_config` regenerates `config.miner.json` from `freqtrade/config.example.json` on
+  every run — the demo example was not a valid freqtrade base (missing pricing/timeout keys).
+- Fix: expanded the example with dry_run_wallet, liquidation_buffer, unfilledtimeout,
+  entry_pricing, exit_pricing, ccxt_config/ccxt_async_config, pair_blacklist. Lesson: the
+  committed EXAMPLE must be a fully valid freqtrade config; runtime configs cannot carry
+  manual fixes. Smoke re-run: exit 0, 315K-candle backtest, artifact + store records OK.
+
+## D-012 — perturb sidecar: strategy_name must equal the variant class name
+- freqtrade `strategy/hyper.py` loads `<strategy_file>.json` and raises
+  "Invalid parameter file provided." when its `strategy_name` != the loaded class name.
+- T-204 originally wrote the ORIGINAL class name into `<Class>_p{k}.json` while renaming
+  the class to `<Class>_p{k}` → every perturb run would fail live (mocks missed it).
+- Fix: write `strategy_name=variant`; regression asserts added (class renamed in .py AND
+  raw sidecar name). LIVE-verified: variant backtest exit 0, "Loading parameters from file"
+  in stdout, no invalid-param error.
+
+## D-013 — recursive-analysis parser fixed against real output
+- Live run showed the real stdout is a rich box table (│ data rows, ┃ header, a
+  "Startup candle ... 100%" progress bar, log lines containing "%"). The fixture-based
+  parser captured garbage ('Startup': 100.0, date rows, '│') → would reject every
+  candidate (worst_pct 100 >= threshold).
+- Fix: accept only data rows (identifier first cell; remaining cells "%" or "-"); record
+  max ABSOLUTE pct per row. Noise + real-format + negative tests added. Live replay on
+  the real stdout: {ema_fast: 0.0, ema_slow: 0.001, rsi: 0.001}.
+- lookahead-analysis live-verified too: CSV export + parse OK (has_bias=False, 20 signals).
+- Harness note: micro-tests must mirror the stage's own setup (run_bias_checks mkdirs the
+  analysis dir; a bare argv runner must do the same).
+
+## D-014 — hyperopt spaces: emit buy params; drop the unused 'sell' space (T-206)
+- Live hyperopt failed: "The 'buy' space is included into the hyperoptimization but no
+  parameter for this space was found in your Strategy." — compiled strategies hardcoded
+  every value; no hyperoptable parameters existed.
+- Design: T-206 (devin) makes the compiler emit buy-space IntParameters for the entry RSI
+  thresholds (defaults = genome values → behavior unchanged without a sidecar) and reduces
+  `--spaces` to buy/roi/stoploss (exits are signal flips → no sell params; freqtrade
+  rejects empty spaces). ROI/stoploss need no strategy params (freqtrade defaults).
+- Status: T-206 merged (devin; 198 tests, ruff clean). Live re-verification (hyperopt exit 0
+  + sidecar with buy params) runs before E2E; compiler change is orchestrator-designed and
+  implemented exactly per card.

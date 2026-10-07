@@ -7,9 +7,10 @@ champion), driven by config + registry, orchestrated around the freqtrade docker
 **Repo**: `F:/freqtrade-strategy-miner-template` · **Worktrees**: `F:/freqtrade-strategy-miner-worktrees/<TASK-ID>`
 
 ## Current milestone
-**M3 — CLI + E2E acceptance** (2026-10-08): all pipeline stages merged (suite 197); fast_gate
-live-verified (real docker backtest + artifact + store); perturb sidecar fix live-verified
-(freqtrade loads variant params). Next: T-205 CLI (opencode) -> T-301 E2E acceptance.
+**M3 — E2E acceptance** (2026-10-08): all tasks T-101..T-206 merged (suite 231); CLI live
+(`status` smoke OK); stage micro-tests live-verified: fast_gate (real backtest+artifact),
+perturb sidecar, lookahead CSV, recursive parser (fixed against real output), hyperopt
+re-verify in flight. Next: T-301 E2E acceptance (full live pipeline run).
 
 ## Completed
 - 2026-10-08 — SCAN: template audited (demo-only; WORKFLOW.md stages 3–10 unimplemented);
@@ -31,9 +32,16 @@ live-verified (real docker backtest + artifact + store); perturb sidecar fix liv
   variant, live-verified). Suite 197. fast_gate live smoke green (315K-candle backtest,
   exit 0, artifact + store records ok). config.example.json expanded to a valid backtesting
   base (pricing/timeout/order keys — smoke caught the KeyError: exit_pricing gap).
+- 2026-10-08 — live micro-verifications: perturb variant+sidecar (exit 0, params loaded);
+  lookahead CSV (has_bias=False, parsed); recursive parser fixed vs real rich-table output
+  (D-013; live replay exact); hyperopt found BROKEN on compiled strategies (no hyperoptable
+  params) -> T-206; config/example fix (D-011).
+- 2026-10-08 — T-205 CLI merged (opencode; died at /tmp permission wall after writing all
+  files; orchestrator verified per D-010: 31 tests, suite, ruff, live `status` smoke).
+  T-206 merged (devin; buy-space IntParameters + spaces buy/roi/stoploss). Suite 231.
 
 ## In progress
-- T-205 CLI + entry points + docs (opencode, worktree T-205, base 4029dab).
+- Hyperopt live re-verification (micro, 8 epochs) — then T-301 E2E.
 
 ## Next up
 - T-301 E2E acceptance (live docker run: data-audit -> fast-gate -> hyperopt -> validate ->
