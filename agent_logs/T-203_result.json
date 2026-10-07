@@ -1,0 +1,20 @@
+{
+  "status": "done",
+  "task": "T-203",
+  "agent": "cline",
+  "files_changed": [
+    "src/strategy_miner/pipeline/checks.py",
+    "tests/test_pipeline_checks.py"
+  ],
+  "tests_run": "pytest tests/test_pipeline_checks.py -q -> 43 passed; pytest -q -> 164 passed, 552 subtests passed; ruff check src/strategy_miner/pipeline/checks.py tests/test_pipeline_checks.py -> All checks passed!",
+  "tests_passed": true,
+  "issues": [
+    "refine.py (T-202) is NOT present in this worktree even though the task lists it as foundation; checks.py therefore re-implements the tiny private _select_stats helper locally instead of importing it (no edits to existing modules).",
+    "Design choice: run_bias_checks runs BOTH commands per candidate and records two 'bias' runs (per the task wording 'two runs per candidate'). The final status combines them with priority failed > rejected > passed, lookahead before recursive. The store receives the frozen vocabulary status (passed/rejected/failed) with the descriptive string (e.g. 'rejected: lookahead bias') in the note; the returned mapping holds the descriptive string.",
+    "Walk-forward gate denominators: the positive-expectancy fraction is computed over successful folds only; the >30% fold-failure check is evaluated first (uses total folds). A no-window span yields 'failed: no walk-forward windows'.",
+    "One-shot final gate: run_final records a 'final_test' run only when a backtest actually executes; the not-frozen and skipped branches set stage status without a run, so a later frozen/forced call still proceeds.",
+    "Process note: an intermediate shell one-liner used to collapse blank lines truncated both deliverable files (write-mode open evaluated before read); both files were fully recreated, re-verified (ruff/tests/git status) and converted to CRLF to match the repo convention (core.autocrlf=false, existing files CRLF)."
+  ],
+  "blocker": null,
+  "summary": "Implemented pipeline/checks.py covering three stages with a module docstring mapping each function to docs/WORKFLOW.md: (6) bias checks — exact lookahead_args/recursive_args argv builders (neither accepts --pairs, both take --timerange), parse_lookahead_csv (stdlib csv, has_bias coerced to bool, None when file/row missing -> 'bias test inconclusive'), parse_recursive_stdout (robust per-line percentage regex, first cell = indicator, max pct per line, empty dict on garbage), and run_bias_checks (writes <user_data>/analysis/lookahead_<Class>.csv, rejects on has_bias/inconclusive/recursive max pct >= threshold (default 5.0), records two 'bias' runs and sets the stage status); (7) walk-forward — add_months (calendar, day-clamped, leap-safe), walk_forward_windows (rolling folds train_start+train_months+k*step .. +test_months while test_end <= end), and run_walk_forward (span train_timerange start -> validation_timerange end, TEST window only per fold with params frozen — documented deviation from per-fold re-optimization; gates median profit_factor >= 1.0 AND positive-expectancy fraction >= 0.6, fold failures skipped, >30% failures -> failed); (9) final gate — run_final (frozen check via <generated>/<Class>.json, one-shot skip unless force, FINAL_TEST backtest through the frozen hard filters + expectancy>0, on pass copies .py/.json/artifact zip into output/champions/<Class>/ and writes champion.json with class_name/created_at UTC/timerange/metrics/paths/run ids). Tests use two docker-free Runner-protocol fakes (BiasRunner writing the lookahead CSV + recursive stdout; BacktestRunner replaying per-call synthetic backtest zips) and pin exact arg lists, parser edge cases, add_months/walk_forward_windows literals, the walk-forward gate matrix and the final-gate not-frozen/skip/force/champion paths. Only the two scoped files are added (git status clean otherwise); ruff clean; full suite green."
+}
