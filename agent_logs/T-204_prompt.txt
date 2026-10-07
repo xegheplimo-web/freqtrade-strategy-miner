@@ -1,0 +1,102 @@
+============================================================
+TASK T-204 — pipeline/robustness.py: stress tests (fee / perturb / drop-top)
+============================================================
+You are working in an isolated git worktree of project `freqtrade-strategy-miner`.
+Foundation on main & present here: runner/results/store/params/data + `pipeline` foundation +
+fast_gate + refine + checks stages.
+
+Read first (relative to worktree root):
+- `.orchestrator/INTERFACES.md` (FROZEN: §1 runner, §2 results, §3 store, §4 params, §7 pipeline).
+- `.orchestrator/AGENT_RULES.md`.
+- `docs/WORKFLOW.md` stage 8 (robustness) — semantic spec ("tìm plateau ổn định").
+- `src/strategy_miner/pipeline/__init__.py` + existing stages — build on them.
+- `src/strategy_miner/params.py` — `perturb_params`, `write_params_file` (reuse).
+- `src/strategy_miner/results.py` — `drop_top_n_trades` (reuse).
+- `config/miner.json` — validation_timerange.
+
+## OBJECTIVE
+Implement stage 8 robustness in `pipeline/robustness.py`: (A) fee stress, (B) parameter
+perturbation plateau check, (C) drop-top-trades fragility check. Docker-free tests.
+
+## SCOPE — create ONLY these files
+- src/strategy_miner/pipeline/robustness.py
+- tests/test_pipeline_robustness.py
+
+## DO NOT TOUCH
+Any other file; no new deps.
+
+## VERIFIED FACT
+`freqtrade backtesting` accepts `--fee <ratio>` ("applied twice: entry and exit") — use it for
+fee stress. No slippage flag exists; fee stress approximates slippage.
+
+## REQUIREMENTS (freeze these rules)
+- Config access via `ctx.miner_cfg.get("robustness", {})` with defaults:
+  `base_fee=0.0005`, `fee_multiplier=1.5`, `perturb_pct=0.07`, `perturb_runs=3`,
+  `drop_top_frac=0.05`. Timerange = `validation_timerange`.
+- `run_robustness(ctx, candidate_ids) -> dict[int, str]` — per candidate run 3 checks:
+  A) FEE: backtest (original strategy, tuned params auto-applied) with args =
+     pipeline.backtest_args(...) + ["--fee", str(base_fee * fee_multiplier)]. Pass iff
+     profit_total > 0 AND profit_factor >= 1.0. Record run (stage "robustness",
+     notes="check=fee").
+  B) PERTURB: for k in range(perturb_runs): seed = (candidate_id * 1000 + k); params =
+     params.read_params_file(<generated>/<Class>.json) -> params.perturb_params(params,
+     perturb_pct, rng=random.Random(seed)); copy strategy text to
+     `<user_data>/strategies/robustness/<Class>_p{k}.py`; sidecar via
+     params.write_params_file(that path, perturbed, strategy_name=<Class>); backtest with
+     `--strategy-path` = robustness dir (container `/freqtrade/user_data/strategies/robustness`)
+     — build args by copying pipeline.backtest_args shape but overriding strategy-path
+     (write a local helper `_robustness_backtest_args(ctx, class_name, timerange, py_dir)`).
+     Per-run pass iff profit_total > 0 AND profit_factor >= 0.8. Check passes iff
+     >= 2/3 of runs pass (use actual run count: passed >= ceil(0.66 * perturb_runs)).
+     Record each run (notes=f"check=perturb k={k} seed={seed}").
+  C) DROP-TOP: load the LATEST validation-run artifact from the store
+     (runs_for(candidate_id, "validation") last artifact_path); parse trades via
+     results.load_backtest_json -> strategy stats -> trades list; n = max(5,
+     ceil(drop_top_frac * len(trades))); result = results.drop_top_n_trades(trades, n).
+     Pass iff profit_abs_after > 0 AND (profit_factor_after is None OR
+     profit_factor_after >= 0.8 * profit_factor_before). No validation artifact ->
+     check fails with note "no validation artifact".
+  - Overall: ALL three checks pass -> "passed", else "rejected: <failed check names>".
+  - set_stage_status("robustness", ...) once per candidate; return mapping.
+- `RobustnessResult` dataclass (or equivalent documented dict): per candidate
+  {fee: {...metrics subset}, perturb: {"passed_runs": n, "runs": k}, drop_top: {...}, status}.
+  Persist the full detail as JSON into the LAST recorded robustness run's notes or as
+  `output/robustness/<Class>.json` (choose one, document it).
+- Module docstring maps to WORKFLOW.md stage 8; note explicitly that multi-regime and
+  multi-pair expansion are OUT OF SCOPE for v1 (recorded as future work).
+
+## TESTS (NO docker) — reuse the FakeRunner + synthetic-zip patterns from
+tests/test_pipeline_refine.py / test_pipeline_checks.py
+- Assertions:
+  - `_robustness_backtest_args` exact list (strategy-path override).
+  - Fee check: pass case (pf 1.2) and fail case (pf 0.95 or negative profit).
+  - Perturb: temp files created (`<Class>_p0.py/.json`) with sidecars parseable and values
+    within ±perturb_pct of originals (seeded determinism: same seed -> same file content);
+    pass/fail matrix (2/3 boundary: 1 pass -> check fails; 2 pass -> passes).
+  - Drop-top: craft validation artifact with known trades; assert n computation and
+    pass/fail on profit concentration (e.g. all profit in top trades -> fail).
+  - Missing validation artifact -> check fails; overall status/reasons correct.
+  - Stage statuses visible in store; runs recorded with stage "robustness".
+
+## ACCEPTANCE CRITERIA
+1. 2 files exist; stdlib + strategy_miner.* imports only.
+2. All tests pass with the project venv; FULL suite still passes.
+3. `ruff check` clean on the 2 files.
+4. `git status --porcelain` shows ONLY your 2 files (+ agent_logs/).
+5. `agent_logs/T-204_result.json` per kit schema.
+
+## VERIFICATION (orchestrator re-runs EXACTLY)
+```bash
+cd <worktree>
+F:/freqtrade-strategy-miner-template/.venv/Scripts/python.exe -m pytest tests/test_pipeline_robustness.py -q
+F:/freqtrade-strategy-miner-template/.venv/Scripts/python.exe -m pytest -q
+F:/freqtrade-strategy-miner-template/.venv/Scripts/ruff.exe check src/strategy_miner/pipeline/robustness.py tests/test_pipeline_robustness.py
+```
+
+## BUDGET NOTE
+Write the deliverable files early (first ~10 min), then refine. Everything needed is here.
+
+## CONSTRAINTS
+- `from __future__ import annotations` at top. English code/comments.
+- No commits/branches/pushes — the orchestrator owns git.
+- If blocked: `BLOCKER:` + `SUGGESTED FOLLOW-UP:`; do not expand scope.

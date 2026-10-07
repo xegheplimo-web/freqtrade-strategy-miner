@@ -1,0 +1,20 @@
+{
+  "status": "done",
+  "task": "T-101",
+  "agent": "cline (timed out at final polish) + orchestrator completion",
+  "files_changed": [
+    "src/strategy_miner/runner.py",
+    "src/strategy_miner/results.py",
+    "tests/test_runner.py",
+    "tests/test_results.py"
+  ],
+  "tests_run": "pytest tests/test_runner.py tests/test_results.py -q -> 34 passed",
+  "tests_passed": true,
+  "issues": [
+    "cline -t 1380 timed out mid final-polish (exit 1) after writing all 4 files",
+    "2 failing runner tests were a Windows CRLF artifact (stdout captured 'hi\\r\\n' vs asserted 'hi\\n')",
+    "1 ruff F401 (unused json import) + unfinished '# __PART4__' sentinel in test_results.py — resolved by completing the missing TestSynthetic class (which uses json) and removing the sentinel"
+  ],
+  "blocker": null,
+  "summary": "DockerRunner (docker CLI wrapper: map_path, build_command, timeout=exit 124, ANSI strip, log writing) + results.py (zip/json backtest parsing, StrategyStats, extract_metrics frozen mapping, positive_months_fraction, drop_top_n_trades). Orchestrator fixes after agent timeout: added _normalize_newlines (CRLF->LF, platform-independent stdout; documented in INTERFACES.md), completed TestSynthetic (2-strategy synthetic parse), cleared sentinel; full suite + ruff green."
+}

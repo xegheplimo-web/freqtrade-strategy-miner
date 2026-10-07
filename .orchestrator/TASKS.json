@@ -12,8 +12,8 @@
       "id": "T-101",
       "title": "runner.py + results.py — docker runner + backtest artifact parsing",
       "agent": "cline",
-      "status": "dispatched",
-      "note": "reassigned from devin (CLI stalled: 21 min idle, zero output)",
+      "status": "done",
+      "note": "reassigned devin->cline (D-009); cline timed out at final polish, orchestrator completed fixes (CRLF normalize, TestSynthetic) per D-010; merged; 34 tests green",
       "worktree": "F:/freqtrade-strategy-miner-worktrees/T-101",
       "branch": "task/T-101-runner-results",
       "prompt": "agent_logs/T-101_prompt.txt",
@@ -24,7 +24,8 @@
       "id": "T-102",
       "title": "store.py + params.py — SQLite registry + hyperopt params flow",
       "agent": "cline",
-      "status": "dispatched",
+      "status": "done",
+      "note": "merged; suite green",
       "worktree": "F:/freqtrade-strategy-miner-worktrees/T-102",
       "branch": "task/T-102-store-params",
       "prompt": "agent_logs/T-102_prompt.txt",
@@ -35,7 +36,8 @@
       "id": "T-103",
       "title": "data.py — data audit + download args + checksums",
       "agent": "cline",
-      "status": "dispatched",
+      "status": "done",
+      "note": "merged; real-data audit ok (499K candles/pair)",
       "worktree": "F:/freqtrade-strategy-miner-worktrees/T-103",
       "branch": "task/T-103-data",
       "prompt": "agent_logs/T-103_prompt.txt",
@@ -47,6 +49,7 @@
       "title": "tests + docs hygiene — fitness/genome/compiler coverage + README dev section",
       "agent": "opencode",
       "status": "done",
+      "note": "merged",
       "worktree": "F:/freqtrade-strategy-miner-worktrees/T-104",
       "branch": "task/T-104-tests-docs",
       "prompt": "agent_logs/T-104_prompt.txt",
@@ -55,11 +58,11 @@
     }
   ],
   "backlog": [
-    {"id": "T-201", "title": "pipeline ctx + fast_gate + report skeleton", "agent": "devin"},
-    {"id": "T-202", "title": "hyperopt + validation stages (params flow)", "agent": "devin"},
-    {"id": "T-203", "title": "bias + walk-forward + final gate stages", "agent": "cline"},
-    {"id": "T-204", "title": "robustness stage (fee/perturb/drop-top)", "agent": "cline"},
-    {"id": "T-205", "title": "cli.py + docs/pipeline.md", "agent": "opencode"},
-    {"id": "T-301", "title": "E2E acceptance: full pipeline live run (Hermes)", "agent": "hermes"}
+    {"id": "T-201", "title": "pipeline foundation (ctx + helpers) + fast_gate stage", "agent": "cline", "wave": 2, "deps": ["T-101", "T-102", "T-103"]},
+    {"id": "T-202", "title": "hyperopt + validation stages (params flow)", "agent": "devin", "wave": 2, "deps": ["T-201"]},
+    {"id": "T-203", "title": "bias checks + walk-forward + final gate stages", "agent": "cline", "wave": 2, "deps": ["T-201"]},
+    {"id": "T-204", "title": "robustness stage (fee/perturb/drop-top)", "agent": "opencode", "wave": 2, "deps": ["T-201"]},
+    {"id": "T-205", "title": "cli.py + entry points + docs/pipeline.md", "agent": "opencode", "wave": 3, "deps": ["T-202", "T-203", "T-204"]},
+    {"id": "T-301", "title": "E2E acceptance: full pipeline live run (Hermes)", "agent": "hermes", "wave": 3, "deps": ["T-205"]}
   ]
 }

@@ -32,7 +32,7 @@ class RunResult:
     argv: tuple[str, ...]      # full host-level command actually executed
     exit_code: int             # 124 on timeout; real exit code otherwise
     stdout: str                # combined stdout+stderr, decoded utf-8 errors="replace",
-                               # ANSI escape sequences stripped
+                               # ANSI escape sequences stripped, CRLF normalized to LF
     duration_s: float
     log_path: Path | None = None   # set when log_dir/log_name given
 

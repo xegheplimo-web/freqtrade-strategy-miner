@@ -1,0 +1,122 @@
+============================================================
+TASK T-201 — pipeline foundation + fast_gate stage
+============================================================
+You are working in an isolated git worktree of project `freqtrade-strategy-miner`
+(Python >=3.11, package `src/strategy_miner`, tests in `tests/`). The foundation modules
+runner/results/store/params/data are ALREADY on main and present in this worktree. You build
+the pipeline package foundation + the first pipeline stage (fast gate).
+
+Read first (paths relative to this worktree root):
+- `.orchestrator/INTERFACES.md` — FROZEN contract. Sections 1 (runner), 2 (results), 3 (store),
+  7 (pipeline layout + PipelineContext) are binding.
+- `.orchestrator/AGENT_RULES.md` — binding rules.
+- `docs/WORKFLOW.md` stages 0–3 (data/generate/compile/fast gate) — the semantic spec.
+- Existing modules you MUST reuse (do not re-implement): `src/strategy_miner/runner.py`,
+  `results.py`, `store.py`, `fitness.py`, `generator.py` (GenomeGenerator),
+  `compiler.py` (compile_strategy, write_strategy), `orchestrator.py` (Paths, load_config).
+- `config/miner.json` — pipeline config (seed, candidate_count, timeframe, can_short,
+  train_timerange, hard_filters{min_trades,max_drawdown_pct,min_profit_factor,min_pair_coverage},
+  selection{top_fraction, min_candidates}, pairs, exchange, trading_mode).
+
+## OBJECTIVE
+Create the `strategy_miner.pipeline` package foundation + the fast-gate stage, with tests that
+run WITHOUT docker (fake runner) and a clean seam for the real DockerRunner.
+
+## SCOPE — create ONLY these files
+- src/strategy_miner/pipeline/__init__.py
+- src/strategy_miner/pipeline/fast_gate.py
+- tests/test_pipeline_foundation.py
+- tests/test_pipeline_fast_gate.py
+
+## DO NOT TOUCH
+Any other file (no edits to runner/results/store/etc; no pyproject changes; no new deps).
+
+## REQUIREMENTS
+### pipeline/__init__.py — foundation (frozen additions; INTERFACES.md §7 shapes them)
+- `PipelineContext` frozen dataclass EXACTLY as INTERFACES.md §7 (root, miner_cfg, runner,
+  store, user_data, generated_dir, results_dir, ft_config_container, generated_dir_container,
+  results_dir_container).
+- `make_context(root, *, config_path=None, runner=None, db_path=None) -> PipelineContext`:
+  loads config (default `<root>/config/miner.json`), builds user_data paths
+  (`<root>/freqtrade/user_data/...`), defaults runner=DockerRunner(user_data),
+  store=Store(db_path or `<root>/output/miner.db`), ensures generated/results dirs exist,
+  sets the three container-path strings (`/freqtrade/user_data/...`).
+- `sync_ft_config(ctx) -> Path`: writes `<root>/freqtrade/user_data/config.miner.json` by
+  merging `freqtrade/config.example.json` with miner config values (pairs -> pair_whitelist,
+  exchange.name, trading_mode, margin_mode "isolated" for futures, stake_currency USDT,
+  timeframe). Returns the path. (File is gitignored; content must be valid JSON.)
+- `backtest_args(ctx, class_name, timerange, *, export="trades") -> list[str]`:
+  EXACT list: ["backtesting", "--config", ctx.ft_config_container, "--strategy", class_name,
+  "--strategy-path", ctx.generated_dir_container, "--timerange", timerange,
+  "--export", export]. (All container paths.)
+- `find_latest_artifact(ctx, since_ts: float) -> Path | None`: look in ctx.results_dir:
+  prefer `.last_result.json` ({"latest_backtest": "<zip name>"}) when its zip mtime >=
+  since_ts; else the newest `backtest-result-*.zip` with mtime >= since_ts; else newest
+  overall (best effort); None if no zip at all. Never return `*_config.json`.
+- `record_stage_run(ctx, candidate_id, stage, args, result, *, artifact_path=None,
+  metrics=None, notes=None) -> int`: thin wrapper over Store.record_run using the RunResult
+  (argv=result.argv, exit_code, duration_s) — so stages never hand-roll store calls.
+### pipeline/fast_gate.py — stage 3 (WORKFLOW.md) 
+- `FastGateResult` dataclass: `generated: int`, `backtested: int`, `failed_runs: int`,
+  `rejected: int`, `shortlisted: tuple[int, ...]` (candidate ids), `scores: dict[int, float]`
+  (candidate id -> fitness score for survivors), `artifact_paths: dict[int, str]`.
+- `run_fast_gate(ctx, *, count=None) -> FastGateResult`:
+  1. Generate `count or cfg["candidate_count"]` genomes via GenomeGenerator (cfg seed /
+     timeframe / can_short), write each strategy with compiler.write_strategy into
+     ctx.generated_dir, upsert each into ctx.store (py_path = host path relative to root or
+     absolute — pick one and be consistent; document it).
+  2. For each candidate: `sync_ft_config` NOT needed per candidate; run backtest with
+     ctx.runner.run(backtest_args(...train_timerange...), log_dir=<worktree
+     agent_logs>, log_name=f"fast_gate_{class_name}.log")`; on exit_code != 0 ->
+     record_stage_run + store.set_stage_status("fast_gate", "failed") + count failed; continue.
+  3. On success: find artifact (find_latest_artifact), parse via
+     results.parse_backtest_result, extract_metrics, record_stage_run with metrics dict
+     (dataclasses.asdict of Metrics), set status "passed"/"rejected" via
+     fitness.passes_hard_filters(**cfg["hard_filters"]).
+  4. Shortlist: rank survivors by fitness.score desc; k = max(int(ceil(top_fraction *
+     generated)), min_candidates); take top k (if fewer survivors, take all survivors);
+     set_stage_status("fast_gate", "shortlisted") for chosen, "rejected" for other survivors.
+  5. Return FastGateResult (scores = survivor scores for ALL survivors, not only shortlisted;
+     shortlisted = chosen ids).
+### Tests (NO docker, NO network)
+- FakeRunner (in tests): implements Runner protocol; on run(args, **kw) it COPIES a prepared
+  fixture zip (tests/fixtures/backtest-sample.zip) into ctx.results_dir under a chosen name
+  (simulating freqtrade export), optionally writes `.last_result.json`, and returns a
+  RunResult(exit_code=0|given, ...). Record every call's args for assertions. map_path like
+  DockerRunner. Make several variants (fail one candidate, etc.).
+- test_pipeline_foundation.py: make_context on a tmp tree (copy config/miner.json);
+  backtest_args exact equality; sync_ft_config output is valid JSON with expected keys;
+  find_latest_artifact: .last_result.json preference, fallback newest zip, since_ts filter,
+  None case; record_stage_run writes to store (assert runs_for returns it).
+- test_pipeline_fast_gate.py: happy path with 3 candidates (FakeRunner returns the sample zip
+  for all -> same metrics -> all survivors): asserts generated==3, backtested==3, statuses in
+  store ("shortlisted" count == expected k with cfg top_fraction/min_candidates on small n),
+  FastGateResult fields consistent, runner called with EXACT backtest_args per candidate,
+  metrics recorded in store runs; failure path: one candidate exit_code=1 -> failed_runs==1 +
+  stage "failed" + others unaffected; artifact-missing path: runner success but no zip ->
+  recorded as failed with note.
+
+## ACCEPTANCE CRITERIA
+1. 4 files exist; pipeline imports only from stdlib + strategy_miner.* (+ existing deps).
+2. All tests pass with the project venv; FULL suite still passes.
+3. `ruff check` clean on the 4 files.
+4. `git status --porcelain` shows ONLY your 4 files (+ agent_logs/).
+5. `agent_logs/T-201_result.json` per kit schema (status/task/agent/files_changed/tests_run/
+   tests_passed/issues/blocker/summary).
+
+## VERIFICATION (the orchestrator will re-run these EXACTLY)
+```bash
+cd <worktree>
+F:/freqtrade-strategy-miner-template/.venv/Scripts/python.exe -m pytest tests/test_pipeline_foundation.py tests/test_pipeline_fast_gate.py -q
+F:/freqtrade-strategy-miner-template/.venv/Scripts/python.exe -m pytest -q
+F:/freqtrade-strategy-miner-template/.venv/Scripts/ruff.exe check src/strategy_miner/pipeline/__init__.py src/strategy_miner/pipeline/fast_gate.py tests/test_pipeline_foundation.py tests/test_pipeline_fast_gate.py
+```
+
+## BUDGET NOTE
+Write the deliverable files early (first ~10 min), then refine. Do not explore beyond the
+listed files — everything needed is specified here + INTERFACES.md.
+
+## CONSTRAINTS
+- `from __future__ import annotations` at top. English code/comments.
+- No commits/branches/pushes — the orchestrator owns git.
+- If blocked: report `BLOCKER:` + `SUGGESTED FOLLOW-UP:`; do not expand scope.

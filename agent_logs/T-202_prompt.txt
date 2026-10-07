@@ -1,0 +1,104 @@
+============================================================
+TASK T-202 — refine stages: hyperopt + validation
+============================================================
+You are working in an isolated git worktree of project `freqtrade-strategy-miner`.
+The foundation is on main and present here: runner/results/store/params/data modules +
+`strategy_miner.pipeline` foundation (PipelineContext, make_context, sync_ft_config,
+backtest_args, find_latest_artifact, record_stage_run) + fast_gate stage.
+
+Read first (paths relative to this worktree root):
+- `.orchestrator/INTERFACES.md` — FROZEN contract (§1 runner, §2 results, §3 store, §4 params,
+  §7 pipeline). Binding.
+- `.orchestrator/AGENT_RULES.md`.
+- `docs/WORKFLOW.md` stages 4–5 (hyperopt, validation) — semantic spec.
+- `src/strategy_miner/pipeline/__init__.py` + `fast_gate.py` — the foundation you build on.
+- `src/strategy_miner/params.py` — hyperopt params-file helpers you MUST reuse.
+- `config/miner.json` — train_timerange, validation_timerange, hard_filters.
+
+## OBJECTIVE
+Implement stage 4 (hyperopt on shortlisted candidates) and stage 5 (validation on unseen
+window) in `pipeline/refine.py`, with docker-free tests.
+
+## SCOPE — create ONLY these files
+- src/strategy_miner/pipeline/refine.py
+- tests/test_pipeline_refine.py
+
+## DO NOT TOUCH
+Any other file (no edits to __init__.py/fast_gate.py; no new deps).
+
+## REQUIREMENTS
+### Hyperopt stage
+- `hyperopt_args(ctx, class_name, timerange, *, epochs) -> list[str]` — EXACT:
+  ["hyperopt", "--config", ctx.ft_config_container, "--strategy", class_name,
+  "--strategy-path", ctx.generated_dir_container, "--timerange", timerange,
+  "--spaces", "buy", "sell", "roi", "stoploss", "--hyperopt-loss",
+  "MultiMetricHyperOptLoss", "-e", str(epochs)].
+- `run_hyperopt(ctx, candidate_ids, *, epochs=None) -> dict[int, str]`:
+  - epochs = explicit arg or `ctx.miner_cfg.get("hyperopt", {}).get("epochs", 300)`.
+  - per candidate: runner.run(hyperopt_args(...train_timerange...), log_dir=<worktree
+    agent_logs>, log_name=f"hyperopt_{class_name}.log"). exit_code != 0 -> record run,
+    status "failed", add to failed dict, continue.
+  - on success: the best-params sidecar `<generated_dir>/<Class>.json` is auto-exported by
+    freqtrade (INTERFACES.md header note; D-005). Verify it exists and read it with
+    params.read_params_file (invalid -> failed with note). Update the candidate's
+    params_path in the store (upsert_candidate with same genome + py_path + new params_path).
+    record_stage_run with notes="epochs=<n>". Status "passed".
+  - returns {candidate_id: status_string} ("passed"/"failed: reason").
+### Validation stage
+- `run_validation(ctx, candidate_ids, *, train_metrics=None) -> dict[int, str]`:
+  - per candidate: backtest on `validation_timerange` with pipeline.backtest_args (the params
+    sidecar is auto-applied by freqtrade when present next to the strategy — no extra flags).
+  - parse artifact -> extract_metrics -> record_stage_run(metrics=asdict(metrics)).
+  - Gates (ALL must hold, else reject with reason):
+    1. fitness.passes_hard_filters(metrics, **ctx.miner_cfg["hard_filters"]) — same bar as train.
+    2. If the latest fast_gate metrics for the candidate exist in the store: validation
+       max_drawdown_pct <= 1.5 * train max_drawdown_pct (no drawdown explosion).
+    3. If train metrics exist: validation profit_factor >= 0.6 * train profit_factor.
+    Fetch train metrics from store runs_for(candidate_id, "fast_gate") (metrics dict), fallback
+    to `train_metrics` arg mapping {candidate_id: dict} when provided.
+  - status "passed"/"rejected: <reason>"; returns mapping.
+- `refine_pipeline(ctx, candidate_ids, *, epochs=None) -> dict` convenience: runs hyperopt then
+  validation on the hyperopt-passed ids; returns {"hyperopt": {...}, "validation": {...}}.
+
+### Tests (NO docker) — FakeRunner + SYNTHETIC artifact zips
+- Build helper in the test file: `make_result_zip(dir, strategy_name, *, profit_total,
+  max_drawdown_account, profit_factor, expectancy, total_trades, per_pair_trades)` writes a
+  minimal backtest-result zip: {"strategy": {name: {summary fields..., "trades": [],
+  "results_per_pair": [{"key": pair, "trades": n}, ..., {"key": "TOTAL", "trades": total}],
+  "pairlist": [pairs...]}}}. results.parse tolerates missing optional keys.
+- FakeRunner variants: (a) hyperopt fake: writes `<generated>/<Class>.json` params sidecar
+  (valid format via params.write_params_file) + returns exit 0; (b) validation fake: writes
+  a synthetic zip into results_dir with chosen metrics; (c) failure fake: exit 1.
+- Assertions:
+  - hyperopt_args exact equality; run_hyperopt success -> params_path updated in store
+    (candidate row), stage "passed", statuses returned; params-file-missing -> "failed: ...".
+  - run_validation gating matrix via synthetic zips: pass-all case; fail hard filters case
+    (e.g. trades below min_trades); drawdown-explosion case (dd_val > 1.5*dd_train using a
+    seeded fast_gate metrics dict via train_metrics); pf-collapse case; missing artifact case.
+  - store integration: runs recorded with stage names "hyperopt"/"validation"; metrics JSON
+    round-trips; stage statuses visible via store.stage_status.
+  - refine_pipeline chains hyperopt-passed ids only.
+
+## ACCEPTANCE CRITERIA
+1. 2 files exist; imports only stdlib + strategy_miner.*.
+2. All tests pass with the project venv; FULL suite still passes.
+3. `ruff check` clean on the 2 files.
+4. `git status --porcelain` shows ONLY your 2 files (+ agent_logs/).
+5. `agent_logs/T-202_result.json` per kit schema.
+
+## VERIFICATION (the orchestrator will re-run these EXACTLY)
+```bash
+cd <worktree>
+F:/freqtrade-strategy-miner-template/.venv/Scripts/python.exe -m pytest tests/test_pipeline_refine.py -q
+F:/freqtrade-strategy-miner-template/.venv/Scripts/python.exe -m pytest -q
+F:/freqtrade-strategy-miner-template/.venv/Scripts/ruff.exe check src/strategy_miner/pipeline/refine.py tests/test_pipeline_refine.py
+```
+
+## BUDGET NOTE
+Write the deliverable files early (first ~10 min), then refine. Everything needed is in this
+card + the listed files.
+
+## CONSTRAINTS
+- `from __future__ import annotations` at top. English code/comments.
+- No commits/branches/pushes — the orchestrator owns git.
+- If blocked: report `BLOCKER:` + `SUGGESTED FOLLOW-UP:`; do not expand scope.

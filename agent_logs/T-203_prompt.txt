@@ -1,0 +1,122 @@
+============================================================
+TASK T-203 — pipeline/checks.py: bias checks + walk-forward + final gate
+============================================================
+You are working in an isolated git worktree of project `freqtrade-strategy-miner`.
+Foundation on main & present here: runner/results/store/params/data + `pipeline` foundation
+(PipelineContext, make_context, sync_ft_config, backtest_args, find_latest_artifact,
+record_stage_run) + fast_gate + refine stages.
+
+Read first (relative to worktree root):
+- `.orchestrator/INTERFACES.md` (FROZEN: §1 runner, §2 results, §3 store, §7 pipeline).
+- `.orchestrator/AGENT_RULES.md`.
+- `docs/WORKFLOW.md` stages 6–9 (bias checks / walk-forward / robustness / final test).
+- `src/strategy_miner/pipeline/__init__.py`, `fast_gate.py`, `refine.py` — build on them.
+- `config/miner.json` — timeranges, hard_filters.
+
+## OBJECTIVE
+Implement three stages in `pipeline/checks.py` (docker-free tests):
+(6) bias checks — lookahead-analysis + recursive-analysis; (7) walk-forward rolling OOS;
+(9) final gate — one-shot FINAL_TEST + champion artifacts.
+
+## SCOPE — create ONLY these files
+- src/strategy_miner/pipeline/checks.py
+- tests/test_pipeline_checks.py
+
+## DO NOT TOUCH
+Any other file (no edits to existing modules; no new deps).
+
+## VERIFIED FREQTRADE FACTS (2026.9 — use them, do not re-derive)
+- `lookahead-analysis` does NOT signal bias via exit code (always exits 0 on a clean run).
+  Machine-readable signal = CSV export via `--lookahead-analysis-exportfilename <path>`
+  (only written when total_signals > minimum_trade_amount, default 10). CSV columns:
+  `filename,strategy,has_bias,total_signals,biased_entry_signals,biased_exit_signals,biased_indicators`.
+  `has_bias` is the hard-reject signal. No CSV row for the strategy -> "bias test inconclusive
+  (too few signals)" -> reject.
+- `recursive-analysis` has NO csv/exit signal; it prints a table of indicator rows with
+  percentage columns (one per startup candle). Parse the percentages from stdout.
+- Neither command accepts `--pairs`; both need `--timerange`.
+
+## REQUIREMENTS
+### Bias stage
+- `lookahead_args(ctx, class_name, timerange, csv_container_path) -> list[str]` EXACT:
+  ["lookahead-analysis", "--config", ctx.ft_config_container, "--strategy", class_name,
+  "--strategy-path", ctx.generated_dir_container, "--timerange", timerange,
+  "--lookahead-analysis-exportfilename", csv_container_path].
+- `recursive_args(ctx, class_name, timerange) -> list[str]` EXACT:
+  ["recursive-analysis", "--config", ctx.ft_config_container, "--strategy", class_name,
+  "--strategy-path", ctx.generated_dir_container, "--timerange", timerange].
+- `parse_lookahead_csv(path) -> dict | None`: stdlib csv; returns row dict for the strategy
+  (has_bias bool) or None if file/row missing.
+- `parse_recursive_stdout(text) -> dict[str, float]`: {indicator: max_pct}; robust regex on
+  `(\d+(?:\.\d+)?)%` per line, indicator = first cell text; tolerate table borders/ANSI-free
+  text; empty dict when nothing parses (record raw note instead — do NOT crash).
+- `run_bias_checks(ctx, candidate_ids) -> dict[int, str]`:
+  - timerange = `ctx.miner_cfg.get("bias", {}).get("timerange", cfg["validation_timerange"])`.
+  - ensure `<user_data>/analysis` dir exists; csv container path
+    `/freqtrade/user_data/analysis/lookahead_<Class>.csv`.
+  - lookahead: run; exit != 0 -> "failed: <code>". Parse CSV: has_bias True -> "rejected: lookahead bias"; no row -> "rejected: bias test inconclusive"; else lookahead clean.
+  - recursive: run; exit != 0 -> "failed: <code>"; parse pcts; max pct >=
+    `cfg.get("bias", {}).get("recursive_max_pct", 5.0)` -> "rejected: recursive <indicator> <pct>%";
+    else "passed" (store pcts in notes).
+  - record_stage_run stage "bias" for BOTH commands (two runs per candidate) + set_stage_status
+    ("bias", final status). Returns mapping.
+### Walk-forward stage (rolling OOS, params frozen)
+- Helper `add_months(ymd: str, n: int) -> str` (stdlib calendar; "YYYYMMDD" in/out).
+- `walk_forward_windows(train_start, end, *, train_months=12, test_months=3, step_months=3)
+  -> list[tuple[str, str, str]]`: folds (train_start, test_start, test_end) as YYYYMMDD;
+  fold k test window = [train_start + train_months + k*step, + test_months]; iterate while
+  test_end <= end. Return at least 1 fold when the span allows, else [].
+- `run_walk_forward(ctx, candidate_ids, *, train_months=12, test_months=3, step_months=3,
+  max_folds=None) -> dict[int, str]`: span = train_timerange start -> validation_timerange end;
+  per fold: backtest TEST window only (params fixed; train window is context, not re-optimized —
+  document this deviation in a docstring); collect metrics per fold (record_stage_run stage
+  "walk_forward" with notes=fold). Gates: median(test profit_factor) >= 1.0 AND fraction of
+  folds with expectancy > 0 >= 0.6 -> "passed" else "rejected: <reason>". Fold failures
+  (exit!=0 or no artifact) are skipped with note; if >30% folds fail -> "failed".
+### Final gate (stage 9 — one-shot)
+- `run_final(ctx, candidate_ids, *, force=False) -> dict[int, str]`:
+  - frozen check: params sidecar (`<generated>/<Class>.json`) must exist -> else
+    "rejected: not frozen (no params file)".
+  - one-shot: if store already has a final_test run for the candidate and not force ->
+    "skipped: already tested (use force)". 
+  - backtest final_test_timerange -> parse -> metrics -> gates = hard_filters (+expectancy>0) ->
+    "passed"/"rejected: <reason>".
+  - on pass: copy into `<root>/output/champions/<Class>/`: strategy .py, params .json,
+    result artifact (zip); write `champion.json` (class_name, created_at UTC, timerange,
+    metrics dict, paths, run ids). record_stage_run + status.
+- Module docstring must map each function to WORKFLOW.md stages.
+
+### Tests (NO docker)
+- FakeRunner variants: writes lookahead CSV (has_bias True/False/absent); recursive stdout with
+  a fake table (2 indicators, pcts like 0.000% / 12.500%) + garbage stdout case; validation/
+  final zips via the synthetic-zip helper pattern (see tests/test_pipeline_refine.py).
+- Assertions: exact arg lists (lookahead/recursive); CSV parse (missing file, missing row,
+  has_bias True); recursive parse (multi-indicator max pct, garbage -> {}); statuses per case;
+  add_months ("20220131"+1 -> "20220228" leap-safe check with 2024); walk_forward_windows exact
+  fold list for train_start=20220101, end=20251231, 12/3/3 (pin literal boundaries for the
+  first 2 folds + last fold); WF gate matrix (median pf / positive fraction) via per-fold
+  synthetic zips; final: not-frozen reject, one-shot skip, force re-run, champion dir contents
+  (files copied + champion.json valid JSON with metrics).
+
+## ACCEPTANCE CRITERIA
+1. 2 files exist; stdlib + strategy_miner.* imports only.
+2. All tests pass with the project venv; FULL suite still passes.
+3. `ruff check` clean on the 2 files.
+4. `git status --porcelain` shows ONLY your 2 files (+ agent_logs/).
+5. `agent_logs/T-203_result.json` per kit schema.
+
+## VERIFICATION (orchestrator re-runs EXACTLY)
+```bash
+cd <worktree>
+F:/freqtrade-strategy-miner-template/.venv/Scripts/python.exe -m pytest tests/test_pipeline_checks.py -q
+F:/freqtrade-strategy-miner-template/.venv/Scripts/python.exe -m pytest -q
+F:/freqtrade-strategy-miner-template/.venv/Scripts/ruff.exe check src/strategy_miner/pipeline/checks.py tests/test_pipeline_checks.py
+```
+
+## BUDGET NOTE
+Write the deliverable files early (first ~10 min), then refine. Everything needed is here.
+
+## CONSTRAINTS
+- `from __future__ import annotations` at top. English code/comments.
+- No commits/branches/pushes — the orchestrator owns git.
+- If blocked: `BLOCKER:` + `SUGGESTED FOLLOW-UP:`; do not expand scope.

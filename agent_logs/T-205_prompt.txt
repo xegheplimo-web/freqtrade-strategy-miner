@@ -1,0 +1,104 @@
+============================================================
+TASK T-205 — CLI + entry points + pipeline docs
+============================================================
+You are working in an isolated git worktree of project `freqtrade-strategy-miner`.
+ALL pipeline stages are on main & present here: `strategy_miner.pipeline` (ctx foundation,
+fast_gate, refine, checks, robustness) + runner/results/store/params/data.
+
+Read first (relative to worktree root):
+- `.orchestrator/INTERFACES.md` — §6 (CLI conventions: entry points, command names, --root /
+  --config) is BINDING; §7 for stage function names.
+- `.orchestrator/AGENT_RULES.md`.
+- `src/strategy_miner/pipeline/*.py` — exact function signatures you must call.
+- `src/strategy_miner/data.py` (download_args, audit_data), `orchestrator.py`
+  (generate_batch), `store.py` (list_candidates, stage_status, shortlist).
+- `config/miner.json` — timeranges used for defaults.
+
+## OBJECTIVE
+Wire everything into a CLI (`python -m strategy_miner <cmd>` and `scripts/miner.py <cmd>`)
++ document the pipeline.
+
+## SCOPE — create ONLY these files
+- src/strategy_miner/cli.py
+- src/strategy_miner/__main__.py
+- scripts/miner.py
+- docs/pipeline.md
+- tests/test_cli.py
+
+## DO NOT TOUCH
+Any other file (no edits to existing modules; no README changes; no new deps).
+
+## REQUIREMENTS
+### cli.py
+- `main(argv: list[str] | None = None, *, ctx_factory=None) -> int` — testable: ctx_factory
+  defaults to `pipeline.make_context`; tests inject a fake. Returns process exit code.
+- `build_parser() -> argparse.ArgumentParser` with global `--root PATH` (default: repo root
+  derived from `Path(__file__).resolve().parents[2]`) and `--config PATH` (default
+  `<root>/config/miner.json`).
+- Commands (names FROZEN — INTERFACES.md §6): `generate`, `data-download`, `data-audit`,
+  `fast-gate`, `hyperopt`, `validate`, `bias`, `walk-forward`, `robust`, `final`, `report`,
+  `status`, `run`. Map to:
+  - generate: orchestrator.generate_batch(root, count=--count) -> print manifest path.
+  - data-download: runner.run(data.download_args(<cfg container>, cfg pairs, [timeframe],
+    timerange)) where timerange = --timerange or derived `train_start-final_end` from cfg
+    (train_timerange start .. final_test_timerange end); print exit code + log note.
+  - data-audit: data.audit_data(<user_data>/data, pairs, [timeframe]) -> print ok + issues.
+  - fast-gate: pipeline.fast_gate.run_fast_gate(ctx, count=--count) -> print result.
+  - hyperopt: ids = --ids or store.shortlist(); refine.run_hyperopt(ctx, ids, epochs=--epochs).
+  - validate/bias/walk-forward/robust/final: ids = --ids or derived via helper
+    `_ids_with_status(ctx, stage, status)` walking store.list_candidates() + stage_status;
+    chain stages: hyperopt->"passed"->validate; validation->"passed"->bias; bias->"passed"->
+    walk-forward; walk_forward->"passed"->robust; robustness->"passed"->final. final takes
+    --force.
+  - walk-forward takes --max-folds; hyperopt --epochs; final --force.
+  - report: write `output/report.md` (markdown: candidates table with class, strategy_id,
+    per-stage status, latest fast_gate metrics if present) + print path.
+  - status: print counts by stage/status from the store.
+  - run: full sequence data-audit (warn-only) -> fast-gate -> hyperopt -> validate -> bias ->
+    walk-forward -> robust -> final; stop when an ids-list is empty; print per-stage summary
+    mapping. (This is the E2E acceptance command.)
+- All stage outputs: print `json.dumps(..., default=str, ensure_ascii=False)` summaries;
+  return 0 on success, 1 on stage failure (any "failed:" statuses) — document choice.
+### __main__.py
+`from .cli import main` + `raise SystemExit(main())` (guard `if __name__ == "__main__":`).
+### scripts/miner.py
+Shim: inserts `<repo>/src` into sys.path (repo root = script's parents[1]), calls
+`strategy_miner.cli.main()`. Works from any cwd.
+### docs/pipeline.md (VIETNAMESE — match repo docs language)
+Cover: kiến trúc tổng quan (sơ đồ text các stage 0–9 → module nào), bảng lệnh CLI với ví dụ,
+các file/artifacts sinh ra (user_data dirs, output/miner.db, output/champions, output/report.md),
+config/miner.json các key chính, nguyên tắc an toàn (không auto-live; one-shot final test;
+repo private). Ngắn gọn, chính xác theo code thật.
+### tests/test_cli.py (NO docker)
+- Parser: each command parses; defaults correct; --ids parses ints.
+- Dispatch: fake ctx_factory (FakeRunner + tmp Store + tmp tree with config); monkeypatch the
+  stage functions in `cli` namespace; assert: fast-gate calls run_fast_gate with count;
+  validate derives ids from store statuses (`_ids_with_status` unit test with seeded store);
+  run-sequence stops when empty; exit codes 0/1 as documented; report writes output/report.md.
+
+## ACCEPTANCE CRITERIA
+1. 5 files exist; stdlib + strategy_miner.* only.
+2. All tests pass with the project venv; FULL suite still passes.
+3. `ruff check` clean on the 5 files.
+4. `git status --porcelain` shows ONLY your 5 files (+ agent_logs/).
+5. `agent_logs/T-205_result.json` per kit schema.
+6. Smoke (orchestrator will also run): `python -m strategy_miner --help` and
+   `python scripts/miner.py --help` print help; `status` runs against a tmp root without
+   crashing.
+
+## VERIFICATION (orchestrator re-runs EXACTLY)
+```bash
+cd <worktree>
+F:/freqtrade-strategy-miner-template/.venv/Scripts/python.exe -m pytest tests/test_cli.py -q
+F:/freqtrade-strategy-miner-template/.venv/Scripts/python.exe -m pytest -q
+F:/freqtrade-strategy-miner-template/.venv/Scripts/ruff.exe check src/strategy_miner/cli.py src/strategy_miner/__main__.py scripts/miner.py tests/test_cli.py
+F:/freqtrade-strategy-miner-template/.venv/Scripts/python.exe -m strategy_miner --help
+```
+
+## BUDGET NOTE
+Write the deliverable files early (first ~10 min), then refine. Everything needed is here.
+
+## CONSTRAINTS
+- `from __future__ import annotations` at top. English code/comments; docs/pipeline.md in Vietnamese.
+- No commits/branches/pushes — the orchestrator owns git.
+- If blocked: `BLOCKER:` + `SUGGESTED FOLLOW-UP:`; do not expand scope.

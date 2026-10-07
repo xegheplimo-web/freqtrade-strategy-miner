@@ -61,8 +61,27 @@ One entry per binding decision. Newest at the bottom. Frozen interfaces/names ch
 
 ## D-009 (2026-10-08) — T-101 reassigned devin -> cline (agent stall policy)
 
-- Devin CLI (print mode, --permission-mode dangerous) stalled on T-101: 21 min wall-clock,
-  CPU frozen ~2.5s, zero file writes, log frozen after intro paragraph. Evidence kept at
+- Devin CLI (print mode, --permission-mode dangerous) produced zero file writes and a frozen
+  log for its first ~5.5 min on T-101 (start 02:54:59, killed 03:00:27); CPU near-idle (~2.5s).
+  Killed and reassigned to cline. Evidence kept at
   `worktrees/T-101/agent_logs/T-101.devin-stall.log`.
-- Policy: if an agent produces no worktree file writes within ~20 min (CPU idle), kill it and
-  reassign to cline; keep the stalled log as evidence. Cline delivered T-102/T-103 fast & clean.
+- Record correction: the kill fired at ~5.5 min — earlier than a defensible stall threshold;
+  devin print-mode output can buffer, so this was not proof of a hard stall. Reassignment kept
+  for velocity (cline delivered T-102/T-103 fast & clean).
+- Policy going forward: ground wall-clock with `date` before declaring a stall; a stall is
+  no worktree writes AND idle CPU for >= 20 min. Cline is the default fallback for reassignment.
+
+## D-010 (2026-10-08) — T-101 cline timeout; orchestrator completes small gaps
+
+- Cline ran T-101 03:00:42 -> ~03:18 (exit 1, "The operation timed out"; -t 1380s budget).
+  It wrote all 4 deliverable files but died mid final-polish: 2 test failures (Windows CRLF
+  artifact: captured stdout "hi\r\n" vs asserted "hi\n"), 1 ruff F401, and an unfinished
+  `# __PART4__` sentinel in tests/test_results.py (missing TestSynthetic class).
+- Orchestrator FIX step (kept within the frozen contract): added `_normalize_newlines`
+  (CRLF -> LF) to runner.py and documented it in INTERFACES.md §1; completed TestSynthetic;
+  removed the sentinel. Result: 34 tests green + ruff clean in the worktree.
+- Policy: when an agent dies leaving a near-complete deliverable, the orchestrator completes
+  small gaps (<= ~15 lines, no design changes) and records them honestly; larger gaps are
+  re-dispatched to another agent.
+- Wave-2 launch mitigation: raise agent timeout budget (`cline -t 2700`) for cards >= 100
+  lines and require files-first ordering (already in cards).
