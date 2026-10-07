@@ -127,3 +127,18 @@ One entry per binding decision. Newest at the bottom. Frozen interfaces/names ch
 - Status: T-206 merged (devin; 198 tests, ruff clean). Live re-verification (hyperopt exit 0
   + sidecar with buy params) runs before E2E; compiler change is orchestrator-designed and
   implemented exactly per card.
+
+## D-015 — E2E acceptance harness: relaxed-gate config for T-301
+- E2E run #1 (production `config/miner.json`, count=3): data-audit ok (499,104 rows/pair,
+  36 zero-volume rows noted); fast-gate generated+backtested 3/3, **rejected 3/3** — legit:
+  PF 0.66–0.86, expectancy negative, dd up to 43.8% (filters: pf >= 1.15, dd <= 25). The
+  pipeline correctly stopped at the empty shortlist ("hyperopt: stopped: empty id list").
+- Finding (product-tuning, deferred): fast_gate applies production gates BEFORE hyperopt, so
+  default-parameter genomes that lose money never reach parameter refinement. Gate
+  calibration vs genome quality is a tuning decision for Sếp — not changed here.
+- Acceptance harness: `config/miner.e2e-acceptance.json` (same data/timeranges; relaxed
+  filters dd <= 60, pf >= 0.5, coverage >= 0.5, min_trades unchanged) — purpose: exercise
+  EVERY stage mechanically end-to-end on live docker. Production config untouched.
+- E2E run #2: `run --count 5 --epochs 40 --config config/miner.e2e-acceptance.json`; if the
+  walk-forward gate still rejects all, the champion path is additionally exercised via
+  `final --ids <id> --force` (sidecars exist post-hyperopt).
