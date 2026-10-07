@@ -7,9 +7,9 @@ champion), driven by config + registry, orchestrated around the freqtrade docker
 **Repo**: `F:/freqtrade-strategy-miner-template` · **Worktrees**: `F:/freqtrade-strategy-miner-worktrees/<TASK-ID>`
 
 ## Current milestone
-**M2 — pipeline stages** (2026-10-08): wave-1 foundation merged (suite 121); fast_gate stage
-merged; hyperopt/validation (T-202), bias/walk-forward/final (T-203), robustness (T-204) in
-flight in parallel worktrees. Next: CLI (T-205) -> E2E acceptance (T-301) on real docker.
+**M3 — CLI + E2E acceptance** (2026-10-08): all pipeline stages merged (suite 197); fast_gate
+live-verified (real docker backtest + artifact + store); perturb sidecar fix live-verified
+(freqtrade loads variant params). Next: T-205 CLI (opencode) -> T-301 E2E acceptance.
 
 ## Completed
 - 2026-10-08 — SCAN: template audited (demo-only; WORKFLOW.md stages 3–10 unimplemented);
@@ -26,14 +26,18 @@ flight in parallel worktrees. Next: CLI (T-205) -> E2E acceptance (T-301) on rea
   T-104 tests+docs. Full suite 99 -> 121 after T-201.
 - 2026-10-08 — T-201 pipeline foundation + fast_gate merged (make_context, sync_ft_config,
   backtest_args, find_latest_artifact, record_stage_run; 22 new tests; ruff clean).
+- 2026-10-08 — wave 2b DONE + merged: T-202 hyperopt+validation (devin), T-203 bias+WF+final
+  (cline), T-204 robustness (opencode; orchestrator fixed perturb sidecar strategy_name ->
+  variant, live-verified). Suite 197. fast_gate live smoke green (315K-candle backtest,
+  exit 0, artifact + store records ok). config.example.json expanded to a valid backtesting
+  base (pricing/timeout/order keys — smoke caught the KeyError: exit_pricing gap).
 
 ## In progress
-- Wave 2b (parallel, base 708109f): T-202 refine (devin) · T-203 checks (cline) ·
-  T-204 robustness (opencode).
+- T-205 CLI + entry points + docs (opencode, worktree T-205, base 4029dab).
 
 ## Next up
-- Wave 2b verify + merge (Hermes) -> T-205 CLI + docs -> T-301 E2E acceptance (live docker run:
-  generate -> backtest -> hyperopt -> validate -> bias -> walk-forward -> robust -> final).
+- T-301 E2E acceptance (live docker run: data-audit -> fast-gate -> hyperopt -> validate ->
+  bias -> walk-forward -> robust -> final -> report).
 
 ## Blocked
 - none

@@ -58,11 +58,11 @@
     }
   ],
   "backlog": [
-    {"id": "T-201", "title": "pipeline foundation (ctx + helpers) + fast_gate stage", "agent": "cline", "wave": 2, "deps": ["T-101", "T-102", "T-103"]},
-    {"id": "T-202", "title": "hyperopt + validation stages (params flow)", "agent": "devin", "wave": 2, "deps": ["T-201"]},
-    {"id": "T-203", "title": "bias checks + walk-forward + final gate stages", "agent": "cline", "wave": 2, "deps": ["T-201"]},
-    {"id": "T-204", "title": "robustness stage (fee/perturb/drop-top)", "agent": "opencode", "wave": 2, "deps": ["T-201"]},
-    {"id": "T-205", "title": "cli.py + entry points + docs/pipeline.md", "agent": "opencode", "wave": 3, "deps": ["T-202", "T-203", "T-204"]},
-    {"id": "T-301", "title": "E2E acceptance: full pipeline live run (Hermes)", "agent": "hermes", "wave": 3, "deps": ["T-205"]}
+    {"id": "T-201", "title": "pipeline foundation (ctx + helpers) + fast_gate stage", "agent": "cline", "wave": 2, "status": "done", "deps": ["T-101", "T-102", "T-103"]},
+    {"id": "T-202", "title": "hyperopt + validation stages (params flow)", "agent": "devin", "wave": 2, "status": "done", "note": "merged; 16 tests", "deps": ["T-201"]},
+    {"id": "T-203", "title": "bias checks + walk-forward + final gate stages", "agent": "cline", "wave": 2, "status": "done", "note": "merged; 43 tests", "deps": ["T-201"]},
+    {"id": "T-204", "title": "robustness stage (fee/perturb/drop-top)", "agent": "opencode", "wave": 2, "status": "done", "note": "merged; orchestrator sidecar strategy_name fix (live-verified)", "deps": ["T-201"]},
+    {"id": "T-205", "title": "cli.py + entry points + docs/pipeline.md", "agent": "opencode", "wave": 3, "status": "dispatched", "note": "worktree task/T-205-cli-docs", "deps": ["T-202", "T-203", "T-204"]},
+    {"id": "T-301", "title": "E2E acceptance: full pipeline live run (Hermes)", "agent": "hermes", "wave": 3, "status": "queued", "deps": ["T-205"]}
   ]
 }
