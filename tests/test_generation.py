@@ -10,8 +10,8 @@ SRC = ROOT / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
-from strategy_miner.compiler import compile_strategy
-from strategy_miner.generator import GenomeGenerator
+from strategy_miner.compiler import compile_strategy  # noqa: E402
+from strategy_miner.generator import GenomeGenerator  # noqa: E402
 
 
 class GenerationTests(unittest.TestCase):
@@ -26,6 +26,20 @@ class GenerationTests(unittest.TestCase):
         ast.parse(source)
         self.assertIn(f"class {genome.class_name}(IStrategy):", source)
         self.assertNotIn("shift(-", source)
+
+    def test_compiled_strategy_exposes_buy_space_params(self) -> None:
+        genome = GenomeGenerator(seed=42).generate_one(1)
+        source = compile_strategy(genome)
+        self.assertIn(
+            f'IntParameter(1, 49, default={genome.rsi_long_max}, space="buy")',
+            source,
+        )
+        self.assertIn(
+            f'IntParameter(51, 99, default={genome.rsi_short_min}, space="buy")',
+            source,
+        )
+        self.assertIn("self.buy_rsi_long_max.value", source)
+        self.assertIn("self.buy_rsi_short_min.value", source)
 
 
 if __name__ == "__main__":

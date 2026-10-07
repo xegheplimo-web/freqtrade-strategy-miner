@@ -5,8 +5,7 @@ from pathlib import Path
 
 from .genome import StrategyGenome
 
-
-STRATEGY_TEMPLATE = '''from freqtrade.strategy import IStrategy
+STRATEGY_TEMPLATE = '''from freqtrade.strategy import IStrategy, IntParameter
 from pandas import DataFrame
 import talib.abstract as ta
 
@@ -24,6 +23,9 @@ class {class_name}(IStrategy):
     trailing_stop = False
     use_exit_signal = True
 
+    buy_rsi_long_max = IntParameter(1, 49, default={rsi_long_max}, space="buy")
+    buy_rsi_short_min = IntParameter(51, 99, default={rsi_short_min}, space="buy")
+
     def populate_indicators(self, dataframe: DataFrame, metadata: dict) -> DataFrame:
         dataframe["ema_fast"] = ta.EMA(dataframe, timeperiod={ema_fast})
         dataframe["ema_slow"] = ta.EMA(dataframe, timeperiod={ema_slow})
@@ -33,7 +35,7 @@ class {class_name}(IStrategy):
     def populate_entry_trend(self, dataframe: DataFrame, metadata: dict) -> DataFrame:
         long_condition = (
             (dataframe["ema_fast"] > dataframe["ema_slow"]) &
-            (dataframe["rsi"] < {rsi_long_max}) &
+            (dataframe["rsi"] < self.buy_rsi_long_max.value) &
             (dataframe["volume"] > 0)
         )
         dataframe.loc[long_condition, ["enter_long", "enter_tag"]] = (1, "trend_rsi_long")
@@ -41,7 +43,7 @@ class {class_name}(IStrategy):
         if self.can_short:
             short_condition = (
                 (dataframe["ema_fast"] < dataframe["ema_slow"]) &
-                (dataframe["rsi"] > {rsi_short_min}) &
+                (dataframe["rsi"] > self.buy_rsi_short_min.value) &
                 (dataframe["volume"] > 0)
             )
             dataframe.loc[short_condition, ["enter_short", "enter_tag"]] = (1, "trend_rsi_short")
@@ -67,6 +69,9 @@ class {class_name}(IStrategy):
 
 
 def compile_strategy(genome: StrategyGenome) -> str:
+    """Generated strategies expose buy-space IntParameters (entry RSI thresholds);
+    roi/stoploss spaces use freqtrade defaults; sell space intentionally unused
+    (exits are signal flips)."""
     genome.validate()
     source = STRATEGY_TEMPLATE.format(
         class_name=genome.class_name,

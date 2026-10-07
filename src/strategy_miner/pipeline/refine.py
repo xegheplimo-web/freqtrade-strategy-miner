@@ -44,7 +44,8 @@ def hyperopt_args(
         "--strategy", class_name,
         "--strategy-path", ctx.generated_dir_container,
         "--timerange", timerange,
-        "--spaces", "buy", "sell", "roi", "stoploss",
+        # No "sell": compiled strategies have no sell params; freqtrade rejects empty spaces
+        "--spaces", "buy", "roi", "stoploss",
         "--hyperopt-loss", "MultiMetricHyperOptLoss",
         "-e", str(epochs),
     ]
