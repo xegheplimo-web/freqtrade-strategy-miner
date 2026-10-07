@@ -1,0 +1,20 @@
+{
+  "status": "done",
+  "task": "T-201",
+  "agent": "cline",
+  "files_changed": [
+    "src/strategy_miner/pipeline/__init__.py",
+    "src/strategy_miner/pipeline/fast_gate.py",
+    "tests/test_pipeline_foundation.py",
+    "tests/test_pipeline_fast_gate.py"
+  ],
+  "tests_run": "pytest tests/test_pipeline_foundation.py tests/test_pipeline_fast_gate.py -q -> 22 passed; pytest -q -> 121 passed, 552 subtests passed; ruff check <4 files> -> All checks passed!",
+  "tests_passed": true,
+  "issues": [
+    "First test run: 5 fast-gate tests failed with TypeError — _make_ctx_with_runner forwarded context kwargs (selection/candidate_count) into FakeRunner; fixed by making the helper accept candidate_count/selection explicitly and passing only the rest to FakeRunner.",
+    "Interpretation choice (documented in code): FastGateResult.rejected counts only candidates that failed the hard filters; survivors that pass filters but fall outside the top-k get store status 'rejected' but are not counted in result.rejected. scores/artifact_paths cover ALL survivors, not only shortlisted.",
+    "py_path convention: stored relative to the worktree root (os-native separators), matching orchestrator.generate_batch."
+  ],
+  "blocker": null,
+  "summary": "Pipeline foundation (frozen PipelineContext per INTERFACES.md §7, make_context with DockerRunner/Store defaults, sync_ft_config merging config.example.json + miner values, exact backtest_args, find_latest_artifact with .last_result.json preference/newest-zip/best-effort/None branches, record_stage_run thin Store wrapper) + fast-gate stage (generate via GenomeGenerator, compile via compiler.write_strategy, upsert with root-relative py_path, one-time sync_ft_config, per-candidate backtest through the Runner protocol seam, parse via results.parse_backtest_result/extract_metrics, hard filters via fitness.passes_hard_filters, top-k shortlist with k=max(ceil(top_fraction*generated), min_candidates)). Tests use a FakeRunner (Runner protocol) that copies tests/fixtures/backtest-sample.zip into results_dir and records every call; variants cover all-success, one-failure, artifact-missing, and hard-filter-rejection paths. Full suite + ruff green; git status shows only the 4 scoped files."
+}
