@@ -1,0 +1,20 @@
+{
+  "status": "done",
+  "task": "T-202",
+  "agent": "devin",
+  "files_changed": [
+    "src/strategy_miner/pipeline/refine.py",
+    "tests/test_pipeline_refine.py"
+  ],
+  "tests_run": "pytest tests/test_pipeline_refine.py -q -> 16 passed; pytest -q -> 137 passed, 552 subtests passed; ruff check src/strategy_miner/pipeline/refine.py tests/test_pipeline_refine.py -> All checks passed!",
+  "tests_passed": true,
+  "issues": [
+    "Interpretation choice (documented in code): run_validation returns 'passed' / 'rejected: <reason>' for gate violations and 'failed: <reason>' for runner/artifact problems (nonzero exit, missing or unreadable artifact) — mirroring the fast_gate convention where infra failures are 'failed', not gate rejections.",
+    "params_path is stored relative to the worktree root, matching the py_path convention used by fast_gate/orchestrator.generate_batch.",
+    "Train metrics for gates 2-3 are read from the latest fast_gate run with non-null metrics in the store (runs_for(candidate_id, 'fast_gate'), reversed), falling back to the train_metrics argument mapping.",
+    "record_stage_run for a successful hyperopt stores the params sidecar path as artifact_path and notes='epochs=<n>'.",
+    "Toolchain-setup hook declined implicitly: the task scope forbids files outside the 2 listed, and .devin/ is not gitignored, so scaffolding config would violate acceptance criterion 4. No .devin/toolchain-setup.dismissed created for the same reason."
+  ],
+  "blocker": null,
+  "summary": "Implemented pipeline/refine.py: hyperopt_args (exact argv per spec: --spaces buy sell roi stoploss, --hyperopt-loss MultiMetricHyperOptLoss, -e epochs), run_hyperopt (train_timerange hyperopt per candidate; nonzero exit/missing sidecar/invalid sidecar -> 'failed: ...' recorded run + store status; success validates the <generated>/<Class>.json sidecar via params.read_params_file, re-upserts the candidate preserving genome+py_path with the new params_path, records run with epochs note, status 'passed'), run_validation (backtest on validation_timerange via pipeline.backtest_args — sidecar auto-applied by freqtrade; artifact parsed via parse_backtest_result + extract_metrics and metrics recorded via record_stage_run; gates = hard_filters, then val_dd <= 1.5*train_dd and val_pf >= 0.6*train_pf when train metrics are known; statuses 'passed'/'rejected: <reason>'/'failed: <reason>'), and refine_pipeline (hyperopt then validation on passed ids only, returns {'hyperopt': ..., 'validation': ...}). Tests use a dispatching FakeRunner (hyperopt -> params.write_params_file sidecar; backtesting -> synthetic make_result_zip artifact + .last_result.json; fail_for -> exit 1) covering argv exactness, params_path update, epochs resolution (arg > config > default 300), sidecar missing/invalid, the full validation gating matrix (pass-all, hard-filter fail, drawdown explosion, pf collapse, store-seeded train metrics, missing artifact, runner failure) and refine_pipeline chaining. 16 new tests, 137 total green, ruff clean, git status shows only the 2 scoped files (agent_logs/ gitignored)."
+}
