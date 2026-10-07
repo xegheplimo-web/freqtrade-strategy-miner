@@ -177,3 +177,34 @@ Thay trọng số bằng objective phù hợp với bot thật trước khi prod
 - Lưu seed + genome + dữ liệu/timerange + phiên bản Freqtrade để tái lập.
 
 Đọc `docs/WORKFLOW.md` để xem quy trình chi tiết.
+
+## 9. Phát triển (Development)
+
+Môi trường phát triển (tạo venv mới hoặc dùng venv có sẵn):
+
+```powershell
+uv venv .venv --python 3.12
+uv pip install --python .venv/Scripts/python.exe pytest ruff pandas pyarrow
+```
+
+(Nếu venv đã có sẵn tại `.venv/`, bỏ qua bước tạo mới.)
+
+Chạy kiểm thử (từ repo root):
+
+```powershell
+F:/freqtrade-strategy-miner-template/.venv/Scripts/python.exe -m pytest
+```
+
+(hoặc `.venv/Scripts/python.exe -m pytest` khi ở repo root.)
+
+Kiểm tra lint:
+
+```powershell
+.venv/Scripts/ruff.exe check .
+```
+
+Chạy demo sinh strategy:
+
+```powershell
+python scripts/run_demo.py --count 10
+```
