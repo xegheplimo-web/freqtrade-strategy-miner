@@ -41,11 +41,19 @@ def passes_hard_filters(
     max_drawdown_pct: float,
     min_profit_factor: float,
     min_pair_coverage: float,
+    min_expectancy: float | None = 0.0,
 ) -> bool:
+    """True when every configured gate holds.
+
+    ``min_expectancy`` defaults to ``0.0`` (expectancy must be strictly
+    positive — the historical behavior). Pass ``None`` to skip the check; the
+    pre-hyperopt fast-gate screen uses that because refining weak default
+    parameter sets is the whole point of hyperopt (DECISIONS D-017).
+    """
     return (
         metrics.trades >= min_trades
         and metrics.max_drawdown_pct <= max_drawdown_pct
         and metrics.profit_factor >= min_profit_factor
-        and metrics.expectancy > 0
+        and (min_expectancy is None or metrics.expectancy > min_expectancy)
         and metrics.pair_coverage >= min_pair_coverage
     )

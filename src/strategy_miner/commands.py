@@ -30,7 +30,7 @@ def hyperopt_command(
     return (
         f"freqtrade hyperopt --config {_q(config)} "
         f"--strategy {strategy} --strategy-path {_q(strategy_path)} "
-        f"--timerange {timerange} --spaces buy sell roi stoploss "
+        f"--timerange {timerange} --spaces buy roi stoploss "
         f"--hyperopt-loss MultiMetricHyperOptLoss -e {epochs}"
     )
 

@@ -1,8 +1,9 @@
 """Fast gate — pipeline stage 3 (WORKFLOW.md).
 
 Generates candidate genomes, compiles each into a strategy file, backtests the
-TRAIN timerange for every candidate, applies the hard filters and shortlists the
-top survivors. Runs without docker in tests via any object implementing the
+TRAIN timerange for every candidate, applies the fast-gate screen filters
+(``fast_gate_filters`` when configured, else ``hard_filters``) and shortlists
+the top survivors. Runs without docker in tests via any object implementing the
 ``Runner`` protocol (see tests/test_pipeline_fast_gate.py::FakeRunner).
 """
 
@@ -33,8 +34,9 @@ class FastGateResult:
     """Outcome of one fast-gate pass.
 
     ``scores``/``artifact_paths`` cover ALL survivors (candidates that passed the
-    hard filters), not only the shortlisted ones; ``rejected`` counts candidates
-    that failed the hard filters. ``shortlisted`` holds the chosen candidate ids.
+    fast-gate filters), not only the shortlisted ones; ``rejected`` counts
+    candidates that failed the fast-gate filters. ``shortlisted`` holds the
+    chosen candidate ids.
     """
 
     generated: int
@@ -79,7 +81,12 @@ def run_fast_gate(ctx: PipelineContext, *, count: int | None = None) -> FastGate
 
     log_dir = ctx.root / "agent_logs"
     timerange = str(cfg["train_timerange"])
-    filters = cfg["hard_filters"]
+    # Pre-hyperopt screen bar (``fast_gate_filters``, DECISIONS D-017): a loose
+    # filter that only drops catastrophes — ranking picks the shortlist; the
+    # production ``hard_filters`` bar applies after refinement
+    # (validation/final) instead of before it. Falls back to ``hard_filters``
+    # when the screen key is absent.
+    filters = cfg.get("fast_gate_filters", cfg["hard_filters"])
 
     backtested = 0
     failed_runs = 0
@@ -132,7 +139,7 @@ def run_fast_gate(ctx: PipelineContext, *, count: int | None = None) -> FastGate
         if not fitness.passes_hard_filters(metrics, **filters):
             rejected += 1
             ctx.store.set_stage_status(candidate_id, STAGE, "rejected",
-                                       note="failed hard filters")
+                                       note="failed fast-gate filters")
             continue
         scores[candidate_id] = score
         artifact_paths[candidate_id] = str(artifact)
@@ -149,7 +156,7 @@ def run_fast_gate(ctx: PipelineContext, *, count: int | None = None) -> FastGate
     shortlisted = tuple(candidate_id for candidate_id, _ in survivors[:k])
     for candidate_id, _ in survivors[k:]:
         ctx.store.set_stage_status(candidate_id, STAGE, "rejected",
-                                   note="passed hard filters but outside top shortlist")
+                                   note="passed fast-gate filters but outside top shortlist")
     for candidate_id in shortlisted:
         ctx.store.set_stage_status(candidate_id, STAGE, "shortlisted")
 

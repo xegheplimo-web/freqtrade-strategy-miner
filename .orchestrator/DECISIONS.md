@@ -157,3 +157,27 @@ One entry per binding decision. Newest at the bottom. Frozen interfaces/names ch
 - CLI note: --config/--root global; --ids/--epochs/--force per-subcommand; report/status take
   no --ids.
 - freqtrade-stable audit: 1 regenerated .pyc only; no data/config/strategy writes.
+
+## D-017 — fast-gate screen split: `fast_gate_filters` (pre-hyperopt) vs `hard_filters` (production)
+- Resolves D-015/D-016 finding #2: fast_gate applied the production gates (pf >= 1.15, dd <= 25,
+  hardcoded expectancy > 0) BEFORE hyperopt, so raw default genomes never reached refinement
+  (E2E: 3/3 rejected at stage 3).
+- Fix: stage 3 screens with `fast_gate_filters` when configured — loose screen floor
+  (min_trades 300, dd 80, pf 0.0, coverage 0.6, `min_expectancy: null` = skip; shortlist
+  ranked by fitness) — and falls back to `hard_filters` when the key is absent (acceptance
+  configs unchanged). `fitness.passes_hard_filters` gained `min_expectancy` (default 0.0,
+  None skips the check). Production `hard_filters` still applies at validation + final, and is
+  now meaningful because params get refined in between. Stage notes renamed to
+  "failed/passed fast-gate filters".
+
+## D-018 — hyperopt hardening: tight ranges + min-trades floor + fixed random-state
+- Resolves D-016 finding #1 (degenerate drift: `buy_rsi_long_max=2`, 39 trades / 3y).
+  Root cause: wide search spaces (1..49 / 51..99) + no trade floor.
+- Fix: compiler template ranges narrowed to the genome neighbourhood
+  (buy_rsi_long_max 20..45, buy_rsi_short_min 55..80; defaults = genome values);
+  `hyperopt.min_trades` (900, config) -> `--min-trades` (epochs below the floor are
+  ineligible); `hyperopt.random_state` (42) -> `--random-state` (reproducible runs). Both
+  flags optional — argv stays byte-identical when unset (tests assert both modes).
+- M4 campaign config: candidate_count 240, epochs 100, selection min 12. Also fixed the
+  commands.py example argv (`--spaces buy sell roi stoploss` -> `buy roi stoploss`; the sell
+  space was rejected live in D-014).

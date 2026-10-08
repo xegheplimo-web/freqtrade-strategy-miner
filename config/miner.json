@@ -1,6 +1,6 @@
 {
   "seed": 20261008,
-  "candidate_count": 50,
+  "candidate_count": 240,
   "timeframe": "5m",
   "can_short": true,
   "train_timerange": "20220101-20241231",
@@ -9,14 +9,26 @@
   "exchange": "binance",
   "trading_mode": "futures",
   "pairs": ["BTC/USDT:USDT", "ETH/USDT:USDT", "SOL/USDT:USDT"],
+  "fast_gate_filters": {
+    "min_trades": 300,
+    "max_drawdown_pct": 80.0,
+    "min_profit_factor": 0.0,
+    "min_pair_coverage": 0.6,
+    "min_expectancy": null
+  },
   "hard_filters": {
     "min_trades": 300,
     "max_drawdown_pct": 25.0,
     "min_profit_factor": 1.15,
     "min_pair_coverage": 0.6
   },
+  "hyperopt": {
+    "epochs": 100,
+    "min_trades": 900,
+    "random_state": 42
+  },
   "selection": {
     "top_fraction": 0.05,
-    "min_candidates": 5
+    "min_candidates": 12
   }
 }

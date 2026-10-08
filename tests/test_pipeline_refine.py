@@ -280,13 +280,26 @@ class TestRunHyperopt:
 
         args, log_dir, log_name = runner.calls[0]
         assert list(args) == hyperopt_args(
-            ctx, "Miner_000001", ctx.miner_cfg["train_timerange"], epochs=42
+            ctx,
+            "Miner_000001",
+            ctx.miner_cfg["train_timerange"],
+            epochs=42,
+            min_trades=ctx.miner_cfg["hyperopt"]["min_trades"],
+            random_state=ctx.miner_cfg["hyperopt"]["random_state"],
+        )
+        # config-driven hyperopt hardening flags (D-018)
+        assert args[args.index("--min-trades") + 1] == str(
+            ctx.miner_cfg["hyperopt"]["min_trades"]
+        )
+        assert args[args.index("--random-state") + 1] == str(
+            ctx.miner_cfg["hyperopt"]["random_state"]
         )
         assert log_dir == ctx.root / "agent_logs"
         assert log_name == "hyperopt_Miner_000001.log"
 
     def test_epochs_defaults_to_300(self, tmp_path: Path) -> None:
-        ctx, runner = _make_ctx(tmp_path)
+        # No hyperopt.epochs in config -> the code default (300) applies.
+        ctx, runner = _make_ctx(tmp_path, config_overrides={"hyperopt": {}})
         cid = _seed_candidate(ctx, 1)
         run_hyperopt(ctx, [cid])
         args = runner.calls[0][0]
@@ -298,6 +311,27 @@ class TestRunHyperopt:
         run_hyperopt(ctx, [cid])
         args = runner.calls[0][0]
         assert args[args.index("-e") + 1] == "75"
+
+    def test_min_trades_and_random_state_from_config(self, tmp_path: Path) -> None:
+        ctx, runner = _make_ctx(
+            tmp_path,
+            config_overrides={
+                "hyperopt": {"epochs": 10, "min_trades": 321, "random_state": 7}
+            },
+        )
+        cid = _seed_candidate(ctx, 1)
+        run_hyperopt(ctx, [cid])
+        args = runner.calls[0][0]
+        assert args[args.index("--min-trades") + 1] == "321"
+        assert args[args.index("--random-state") + 1] == "7"
+
+    def test_no_extra_flags_when_unset(self, tmp_path: Path) -> None:
+        ctx, runner = _make_ctx(tmp_path, config_overrides={"hyperopt": {"epochs": 10}})
+        cid = _seed_candidate(ctx, 1)
+        run_hyperopt(ctx, [cid])
+        args = runner.calls[0][0]
+        assert "--min-trades" not in args
+        assert "--random-state" not in args
 
     def test_runner_failure_marks_failed(self, tmp_path: Path) -> None:
         ctx, _runner = _make_ctx(tmp_path, fail_for={"Miner_000002"})

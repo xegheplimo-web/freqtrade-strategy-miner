@@ -35,10 +35,21 @@ DEFAULT_EPOCHS = 300
 
 
 def hyperopt_args(
-    ctx: PipelineContext, class_name: str, timerange: str, *, epochs: int
+    ctx: PipelineContext,
+    class_name: str,
+    timerange: str,
+    *,
+    epochs: int,
+    min_trades: int | None = None,
+    random_state: int | None = None,
 ) -> list[str]:
-    """Exact freqtrade hyperopt argv (all container paths)."""
-    return [
+    """Exact freqtrade hyperopt argv (all container paths).
+
+    ``min_trades``/``random_state`` are appended only when configured
+    (``miner_cfg["hyperopt"]``); unset keeps freqtrade defaults and the
+    historical byte-identical argv.
+    """
+    argv = [
         "hyperopt",
         "--config", ctx.ft_config_container,
         "--strategy", class_name,
@@ -49,6 +60,11 @@ def hyperopt_args(
         "--hyperopt-loss", "MultiMetricHyperOptLoss",
         "-e", str(epochs),
     ]
+    if min_trades is not None:
+        argv += ["--min-trades", str(int(min_trades))]
+    if random_state is not None:
+        argv += ["--random-state", str(int(random_state))]
+    return argv
 
 
 def run_hyperopt(
@@ -61,8 +77,11 @@ def run_hyperopt(
     (``<generated_dir>/<Class>.json``) is stored as the candidate's
     ``params_path``; the candidate keeps its genome and ``py_path``.
     """
+    hyperopt_cfg = ctx.miner_cfg.get("hyperopt", {}) or {}
     if epochs is None:
-        epochs = int(ctx.miner_cfg.get("hyperopt", {}).get("epochs", DEFAULT_EPOCHS))
+        epochs = int(hyperopt_cfg.get("epochs", DEFAULT_EPOCHS))
+    min_trades = hyperopt_cfg.get("min_trades")
+    random_state = hyperopt_cfg.get("random_state")
     timerange = str(ctx.miner_cfg["train_timerange"])
     log_dir = ctx.root / "agent_logs"
     statuses: dict[int, str] = {}
@@ -73,7 +92,14 @@ def run_hyperopt(
             statuses[candidate_id] = "failed: unknown candidate_id"
             continue
         class_name = row["class_name"]
-        args = hyperopt_args(ctx, class_name, timerange, epochs=epochs)
+        args = hyperopt_args(
+            ctx,
+            class_name,
+            timerange,
+            epochs=epochs,
+            min_trades=min_trades,
+            random_state=random_state,
+        )
         result = ctx.runner.run(
             args, log_dir=log_dir, log_name=f"hyperopt_{class_name}.log"
         )

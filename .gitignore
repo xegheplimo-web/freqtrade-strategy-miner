@@ -21,4 +21,5 @@ _sandbox/
 freqtrade/user_data/strategies/generated/
 freqtrade/user_data/strategies/robustness/
 output/champions/
+output/archive/
 .devin/

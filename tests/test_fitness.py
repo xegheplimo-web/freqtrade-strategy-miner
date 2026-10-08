@@ -97,6 +97,21 @@ class HardFilterTests(unittest.TestCase):
                 metrics = make_metrics(expectancy=bad)
                 self.assertFalse(passes_hard_filters(metrics, **self.base_kwargs()))
 
+    def test_min_expectancy_none_skips_expectancy_gate(self) -> None:
+        metrics = make_metrics(expectancy=-5.0)
+        self.assertTrue(
+            passes_hard_filters(metrics, **self.base_kwargs(), min_expectancy=None)
+        )
+
+    def test_min_expectancy_threshold_is_strict(self) -> None:
+        metrics = make_metrics(expectancy=-0.5)
+        self.assertTrue(
+            passes_hard_filters(metrics, **self.base_kwargs(), min_expectancy=-1.0)
+        )
+        self.assertFalse(
+            passes_hard_filters(metrics, **self.base_kwargs(), min_expectancy=-0.5)
+        )
+
     def test_pair_coverage_exactly_met_passes(self) -> None:
         metrics = make_metrics(pair_coverage=0.5)
         self.assertTrue(passes_hard_filters(metrics, **self.base_kwargs()))

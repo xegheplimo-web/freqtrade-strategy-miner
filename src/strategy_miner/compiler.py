@@ -23,8 +23,8 @@ class {class_name}(IStrategy):
     trailing_stop = False
     use_exit_signal = True
 
-    buy_rsi_long_max = IntParameter(1, 49, default={rsi_long_max}, space="buy")
-    buy_rsi_short_min = IntParameter(51, 99, default={rsi_short_min}, space="buy")
+    buy_rsi_long_max = IntParameter(20, 45, default={rsi_long_max}, space="buy")
+    buy_rsi_short_min = IntParameter(55, 80, default={rsi_short_min}, space="buy")
 
     def populate_indicators(self, dataframe: DataFrame, metadata: dict) -> DataFrame:
         dataframe["ema_fast"] = ta.EMA(dataframe, timeperiod={ema_fast})
@@ -69,9 +69,15 @@ class {class_name}(IStrategy):
 
 
 def compile_strategy(genome: StrategyGenome) -> str:
-    """Generated strategies expose buy-space IntParameters (entry RSI thresholds);
-    roi/stoploss spaces use freqtrade defaults; sell space intentionally unused
-    (exits are signal flips)."""
+    """Generated strategies expose buy-space IntParameters (entry RSI thresholds).
+
+    The hyperopt ranges are confined to the genome neighbourhood (long_max
+    20..45, short_min 55..80 — DECISIONS D-018): with the original wide ranges
+    (1..49 / 51..99) hyperopt drifted into degenerate sparse-entry params
+    (e.g. ``buy_rsi_long_max=2``, 39 trades / 3 years). roi/stoploss spaces use
+    freqtrade defaults; the sell space is intentionally unused (exits are
+    signal flips).
+    """
     genome.validate()
     source = STRATEGY_TEMPLATE.format(
         class_name=genome.class_name,

@@ -98,6 +98,8 @@ def _make_ctx(
     *,
     candidate_count: int = 3,
     selection: dict | None = None,
+    config_overrides: dict | None = None,
+    remove_keys: Iterable[str] = (),
 ):
     """Build a tmp worktree + PipelineContext wired to ``runner``."""
     (tmp_path / "config").mkdir()
@@ -105,6 +107,10 @@ def _make_ctx(
     cfg["candidate_count"] = candidate_count
     if selection is not None:
         cfg["selection"] = selection
+    if config_overrides:
+        cfg.update(config_overrides)
+    for key in remove_keys:
+        cfg.pop(key, None)
     (tmp_path / "config" / "miner.json").write_text(json.dumps(cfg, indent=2), encoding="utf-8")
     (tmp_path / "freqtrade").mkdir()
     shutil.copyfile(
@@ -119,13 +125,22 @@ def _make_ctx_with_runner(
     *,
     candidate_count: int = 3,
     selection: dict | None = None,
+    config_overrides: dict | None = None,
+    remove_keys: Iterable[str] = (),
     **runner_kwargs,
 ) -> tuple:
     """Build a tmp worktree + PipelineContext with a FakeRunner (default: all succeed)."""
     user_data = tmp_path / "freqtrade" / "user_data"
     results_dir = user_data / "backtest_results"
     runner = FakeRunner(FIXTURE_ZIP, results_dir=results_dir, user_data=user_data, **runner_kwargs)
-    ctx = _make_ctx(tmp_path, runner, candidate_count=candidate_count, selection=selection)
+    ctx = _make_ctx(
+        tmp_path,
+        runner,
+        candidate_count=candidate_count,
+        selection=selection,
+        config_overrides=config_overrides,
+        remove_keys=remove_keys,
+    )
     return ctx, runner
 
 
@@ -205,7 +220,7 @@ class TestHappyPath:
             assert row["py_path"] == expected
 
     def test_fewer_survivors_than_k_takes_all(self, tmp_path: Path) -> None:
-        # Default selection: k = max(ceil(0.05 * 3), 5) = 5 > 3 survivors -> all shortlisted.
+        # Default selection: k = max(ceil(0.05 * 3), 12) = 12 > 3 survivors -> all shortlisted.
         ctx, _runner = _make_ctx_with_runner(tmp_path)
         result = run_fast_gate(ctx)
         assert result.generated == 3
@@ -296,3 +311,46 @@ class TestHardFilterRejection:
         assert len(result.scores) == 2
         # k = max(ceil(0.5 * 3), 1) = 2 -> both survivors shortlisted.
         assert set(result.shortlisted) == {by_name["Miner_000001"], by_name["Miner_000003"]}
+
+
+class TestScreenFilters:
+    """The pre-hyperopt screen (``fast_gate_filters``) vs the hard_filters fallback."""
+
+    def test_screen_filters_take_precedence(self, tmp_path: Path) -> None:
+        # The bad fixture fails the production hard_filters (10 trades, dd 90%)
+        # but passes a deliberately loose fast_gate_filters screen -> it must NOT
+        # be rejected, proving the screen key takes precedence at this stage.
+        bad_zip = _make_bad_fixture(tmp_path)
+        ctx, _runner = _make_ctx_with_runner(
+            tmp_path,
+            config_overrides={
+                "fast_gate_filters": {
+                    "min_trades": 5,
+                    "max_drawdown_pct": 95.0,
+                    "min_profit_factor": 0.0,
+                    "min_pair_coverage": 0.0,
+                    "min_expectancy": None,
+                }
+            },
+            fixture_overrides={"Miner_000002": bad_zip},
+        )
+        result = run_fast_gate(ctx)
+
+        assert result.backtested == 3
+        assert result.rejected == 0
+        assert len(result.scores) == 3
+
+    def test_falls_back_to_hard_filters_without_screen_key(self, tmp_path: Path) -> None:
+        # Without fast_gate_filters the stage keeps using hard_filters (the
+        # pre-D-017 behavior, still exercised by the acceptance configs).
+        bad_zip = _make_bad_fixture(tmp_path)
+        ctx, _runner = _make_ctx_with_runner(
+            tmp_path,
+            remove_keys=("fast_gate_filters",),
+            fixture_overrides={"Miner_000002": bad_zip},
+        )
+        result = run_fast_gate(ctx)
+
+        assert result.backtested == 3
+        assert result.rejected == 1
+        assert len(result.scores) == 2

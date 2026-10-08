@@ -7,11 +7,12 @@ champion), driven by config + registry, orchestrated around the freqtrade docker
 **Repo**: `F:/freqtrade-strategy-miner-template` · **Worktrees**: `F:/freqtrade-strategy-miner-worktrees/<TASK-ID>`
 
 ## Current milestone
-**M3 — E2E acceptance: DONE** (2026-10-08). All tasks T-101..T-206 + T-301 complete (suite 231).
-Every pipeline stage executed live against docker freqtrade 2026.9 with own data. Champion
-write path proven. **Next (M4 candidates, Sếp decides):** hyperopt quality tuning (loss
-trade-floor, param ranges, epochs), fast-gate calibration vs hyperopt-first flow, more rule
-templates in the generator.
+**M4 — strategy-quality calibration + first controlled campaign** (in progress, 2026-10-08).
+Calibration applied + tested per D-017/D-018: funnel split (`fast_gate_filters` screen vs
+production `hard_filters`), configurable `min_expectancy`, hyperopt ranges tightened to the
+genome neighbourhood, `--min-trades` floor + fixed `--random-state` (suite 237 green, ruff
+clean). Now: controlled campaign of 240 candidates on real data (train 2022-2024 /
+validation 2025 / final 2026) to prove the miner picks strategies better than baseline.
 
 ## Completed
 - 2026-10-08 — SCAN: template audited (demo-only; WORKFLOW.md stages 3–10 unimplemented);
@@ -47,10 +48,15 @@ templates in the generator.
   freqtrade-stable untouched (1 regenerated .pyc only).
 
 ## In progress
-- (none) — round complete; M4 tuning candidates listed above.
+- M4 campaign: `run --count 240` against docker freqtrade 2026.9 + own data — stages cascade
+  fast-gate -> hyperopt (100 epochs, floor 900) -> validation -> bias -> walk-forward ->
+  robustness -> final; evidence in `agent_logs/campaign_m4*`, `output/leaderboard*`,
+  `output/champions/`.
 
 ## Next up
-- Sếp product decisions: hyperopt loss/range tuning, gate calibration, generator templates.
+- Campaign completion -> leaderboard + reproducibility report -> independent metric
+  re-check on top candidates (re-forward, long/short split, costs/funding) -> champion
+  dry-run readiness verdict for Sếp.
 
 ## Key decisions (see DECISIONS.md)
 - D-003 self-contained runtime (own user_data + own data; freqtrade-stable read-only)

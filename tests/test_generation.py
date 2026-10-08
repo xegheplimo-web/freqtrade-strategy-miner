@@ -31,11 +31,11 @@ class GenerationTests(unittest.TestCase):
         genome = GenomeGenerator(seed=42).generate_one(1)
         source = compile_strategy(genome)
         self.assertIn(
-            f'IntParameter(1, 49, default={genome.rsi_long_max}, space="buy")',
+            f'IntParameter(20, 45, default={genome.rsi_long_max}, space="buy")',
             source,
         )
         self.assertIn(
-            f'IntParameter(51, 99, default={genome.rsi_short_min}, space="buy")',
+            f'IntParameter(55, 80, default={genome.rsi_short_min}, space="buy")',
             source,
         )
         self.assertIn("self.buy_rsi_long_max.value", source)

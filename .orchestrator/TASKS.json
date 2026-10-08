@@ -2,7 +2,7 @@
   "meta": {
     "project": "freqtrade-strategy-miner",
     "updated": "2026-10-08",
-    "milestone": "M1",
+    "milestone": "M4",
     "worktrees_root": "F:/freqtrade-strategy-miner-worktrees",
     "prompts_root": "F:/freqtrade-strategy-miner-template/agent_logs",
     "status_legend": ["queued", "dispatched", "in_progress", "verifying", "done", "blocked", "failed"]
@@ -64,6 +64,11 @@
     {"id": "T-204", "title": "robustness stage (fee/perturb/drop-top)", "agent": "opencode", "wave": 2, "status": "done", "note": "merged; orchestrator sidecar strategy_name fix (live-verified)", "deps": ["T-201"]},
     {"id": "T-205", "title": "cli.py + entry points + docs/pipeline.md", "agent": "opencode", "wave": 3, "status": "done", "note": "merged; 31 tests; opencode died at /tmp permission wall, orchestrator verified + smoke (D-010)", "deps": ["T-202", "T-203", "T-204"]},
     {"id": "T-206", "title": "compiler emits buy-space IntParameters + hyperopt spaces fix", "agent": "devin", "wave": 3, "status": "done", "note": "merged; found live via micro-test (D-014); 198 tests", "deps": ["T-201"]},
-    {"id": "T-301", "title": "E2E acceptance: full pipeline live run (Hermes)", "agent": "hermes", "wave": 3, "status": "done", "note": "all stages live-verified; champion path exercised (forced final, min_trades=1 smoke cfg); acceptance log agent_logs/e2e_sequence.log", "deps": ["T-205", "T-206"]}
+    {"id": "T-301", "title": "E2E acceptance: full pipeline live run (Hermes)", "agent": "hermes", "wave": 3, "status": "done", "note": "all stages live-verified; champion path exercised (forced final, min_trades=1 smoke cfg); acceptance log agent_logs/e2e_sequence.log", "deps": ["T-205", "T-206"]},
+    {"id": "M4-1", "title": "calibration: fast-gate screen split + hyperopt hardening (D-017/D-018)", "agent": "hermes", "wave": 4, "status": "done", "note": "fast_gate_filters + configurable min_expectancy + tight ranges 20..45/55..80 + --min-trades/--random-state; suite 237 green"},
+    {"id": "M4-2", "title": "live smoke: fast-gate + hyperopt small scale on M4 config", "agent": "hermes", "wave": 4, "status": "in_progress"},
+    {"id": "M4-3", "title": "controlled campaign: 240 candidates on real data", "agent": "hermes", "wave": 4, "status": "queued"},
+    {"id": "M4-4", "title": "leaderboard + reproducible report + independent verification", "agent": "hermes", "wave": 4, "status": "queued"},
+    {"id": "M4-5", "title": "champion dry-run readiness verdict (Sếp gate)", "agent": "hermes", "wave": 4, "status": "queued"}
   ]
 }

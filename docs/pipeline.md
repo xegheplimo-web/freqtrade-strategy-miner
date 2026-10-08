@@ -24,8 +24,10 @@ trên các module gốc `runner.py` (chạy freqtrade qua docker), `results.py` 
 artifact backtest), `store.py` (SQLite `<root>/output/miner.db`), `params.py`
 (params sidecar hyperopt), `fitness.py` (score + hard filters).
 
-Chuỗi lọc: fast-gate (backtest TRAIN + hard filters + shortlist top) →
-hyperopt (TRAIN, sinh `<Class>.json`) → validation (VALIDATION + chống
+Chuỗi lọc: fast-gate (backtest TRAIN + `fast_gate_filters` — mức sàng lọc
+lỏng, chỉ chặn thảm họa — + shortlist top theo fitness) → hyperopt (TRAIN,
+sinh `<Class>.json`; floor `hyperopt.min_trades`, `hyperopt.random_state` cố
+định) → validation (VALIDATION + hard filters production + chống
 drawdown bùng nổ / profit-factor sụp) → bias (lookahead + recursive, bias là
 hard reject) → walk-forward (median profit_factor ≥ 1.0, expectancy dương) →
 robustness (fee stress, perturb params, drop-top-trades) → final (FINAL_TEST
@@ -88,11 +90,16 @@ python scripts/miner.py status --root F:/path/to/worktree
 `seed`, `candidate_count`, `timeframe`, `can_short`, `train_timerange`,
 `validation_timerange`, `final_test_timerange`, `exchange`, `trading_mode`,
 `pairs`, `hard_filters` (`min_trades`, `max_drawdown_pct`,
-`min_profit_factor`, `min_pair_coverage`), `selection` (`top_fraction`,
-`min_candidates`). Key tùy chọn (có default trong code): `hyperopt.epochs`
-(mặc định 300), `bias.timerange` (mặc định validation) và
-`bias.recursive_max_pct` (mặc định 5.0), `robustness` (`base_fee` 0.0005,
-`fee_multiplier` 1.5, `perturb_pct` 0.07, `perturb_runs` 3, `drop_top_frac` 0.05).
+`min_profit_factor`, `min_pair_coverage`) — mức production, áp ở validation +
+final; `fast_gate_filters` — mức sàng lọc trước hyperopt (cùng schema, thêm
+`min_expectancy`: `null` = bỏ kiểm tra; thiếu key thì fallback về
+`hard_filters`); `selection` (`top_fraction`, `min_candidates`). Key tùy chọn
+(có default trong code): `hyperopt.epochs` (mặc định 300),
+`hyperopt.min_trades` (floor số trades mỗi epoch — epoch dưới ngưỡng bị loại
+khỏi xếp hạng), `hyperopt.random_state` (đặt để tái lập kết quả),
+`bias.timerange` (mặc định validation) và `bias.recursive_max_pct` (mặc định
+5.0), `robustness` (`base_fee` 0.0005, `fee_multiplier` 1.5, `perturb_pct`
+0.07, `perturb_runs` 3, `drop_top_frac` 0.05).
 
 ## 5. Nguyên tắc an toàn
 
